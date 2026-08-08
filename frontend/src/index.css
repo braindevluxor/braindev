@@ -1966,7 +1966,7 @@ p {
 }
 
 .historial-expandible .historial-header {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .historial-expandible .historial-header h4 {
@@ -1976,39 +1976,35 @@ p {
   margin: 0;
 }
 
+.tabla-historial {
+  width: 100%;
+  max-width: 400px;
+  font-size: 0.9rem;
+}
+
+.tabla-historial th {
+  background: var(--gris-100);
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--gris-600);
+  padding: 0.5rem 0.75rem;
+}
+
+.tabla-historial td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--gris-100);
+}
+
+.tabla-historial tbody tr:last-child td {
+  border-bottom: none;
+}
+
 .acciones {
   display: flex;
   gap: 0.5rem;
   justify-content: flex-end;
-}
-
-.historial-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 0.75rem;
-}
-
-.historial-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  padding: 0.85rem;
-  background-color: var(--gris-50);
-  border: 1px solid var(--borde);
-  border-radius: 0.4rem;
-}
-
-.historial-periodo {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--gris-500);
-  text-transform: uppercase;
-}
-
-.historial-monto {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--gris-900);
 }
 
 @media (max-width: 640px) {

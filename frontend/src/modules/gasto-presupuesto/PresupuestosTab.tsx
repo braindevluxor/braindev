@@ -288,20 +288,28 @@ export default function PresupuestosTab() {
                           <div className="historial-header">
                             <h4>Historial de {d.nombre}</h4>
                           </div>
-                          <div className="historial-grid">
-                            {cargandoHistorial ? (
-                              <Cargando mensaje="Cargando…" />
-                            ) : historialPorMes.length === 0 ? (
-                              <p className="vacio">Sin historial</p>
-                            ) : (
-                              historialPorMes.map(([periodo, monto]) => (
-                                <div key={periodo} className="historial-item">
-                                  <span className="historial-periodo">{periodo}</span>
-                                  <strong className="historial-monto">{formatoUsd(monto)}</strong>
-                                </div>
-                              ))
-                            )}
-                          </div>
+                          {cargandoHistorial ? (
+                            <Cargando mensaje="Cargando…" />
+                          ) : historialPorMes.length === 0 ? (
+                            <p className="vacio">Sin historial</p>
+                          ) : (
+                            <table className="tabla tabla-historial">
+                              <thead>
+                                <tr>
+                                  <th>Periodo</th>
+                                  <th className="td-der">Presupuesto (USD)</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {historialPorMes.map(([periodo, monto]) => (
+                                  <tr key={periodo}>
+                                    <td>{periodo}</td>
+                                    <td className="td-der">{formatoUsd(monto)}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          )}
                         </div>
                       </td>
                     </tr>
