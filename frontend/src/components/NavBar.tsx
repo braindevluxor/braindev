@@ -59,20 +59,23 @@ export default function NavBar({ moduloActivo }: Props) {
             const Icono = p.icono
             const activa = location.pathname === p.ruta
             return (
-              <button
-                key={p.id}
-                type="button"
-                role="tab"
-                aria-selected={activa}
-                title={p.etiqueta}
-                className={`nav-pestana ${activa ? 'activa' : ''}`}
-                onClick={() => navigate(p.ruta)}
-              >
-                <span className="nav-pestana-icono">
+              <div key={p.id} className="nav-pestana-wrapper">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activa}
+                  className={`nav-pestana ${activa ? 'activa' : ''}`}
+                  onClick={() => navigate(p.ruta)}
+                >
+                  <span className="nav-pestana-icono">
+                    <Icono />
+                  </span>
+                </button>
+                <div className="nav-pestana-tooltip">
                   <Icono />
-                </span>
-                <span className="nav-pestana-texto">{p.etiqueta}</span>
-              </button>
+                  <span>{p.etiqueta}</span>
+                </div>
+              </div>
             )
           })}
         </nav>
