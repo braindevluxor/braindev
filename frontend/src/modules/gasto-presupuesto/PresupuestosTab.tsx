@@ -95,7 +95,7 @@ export default function PresupuestosTab() {
     setError(null)
     const valor = Number.parseFloat(montos[departamentoId] ?? '')
     if (!Number.isFinite(valor) || valor < 0) {
-      setError('Ingresa un monto válido (mayor o igual a 0)')
+      setError('Ingresa un monto válido')
       return
     }
     const res = await gpService.guardarPresupuesto({
@@ -108,7 +108,7 @@ export default function PresupuestosTab() {
       setError(res.error.message)
       return
     }
-    mostrarAviso('Presupuesto guardado')
+    mostrarAviso('Guardado')
     void cargarPresupuestosMes()
     if (deptoSeleccionado) {
       void cargarHistorial(deptoSeleccionado)
@@ -126,22 +126,19 @@ export default function PresupuestosTab() {
     }
     setNuevoDepto('')
     setModalDeptoAbierto(false)
-    mostrarAviso('Unidad presupuestaria creada')
+    mostrarAviso('Unidad creada')
     recargarDepartamentos()
   }
 
   async function eliminarDepartamento(d: Departamento) {
     setError(null)
-    const confirmacion = window.confirm(
-      `¿Eliminar "${d.nombre}"?\n\nSe eliminarán sus presupuestos. No se podrá eliminar si tiene movimientos registrados.`,
-    )
-    if (!confirmacion) return
+    if (!window.confirm(`¿Eliminar "${d.nombre}"?`)) return
     const res = await gpService.eliminarDepartamento(d.id)
     if (res.error) {
-      setError(`No se pudo eliminar: ${res.error.message}`)
+      setError(res.error.message)
       return
     }
-    mostrarAviso('Unidad presupuestaria eliminada')
+    mostrarAviso('Eliminada')
     recargarDepartamentos()
     if (deptoSeleccionado === d.id) {
       setDeptoSeleccionado(null)
@@ -165,25 +162,19 @@ export default function PresupuestosTab() {
       mostrarAviso(`Copiado desde ${nombreMes(anioAnterior, mesAnterior)}`)
       void cargarPresupuestosMes()
     } else {
-      setError('No hay presupuestos en el mes anterior')
+      setError('Sin datos en mes anterior')
     }
   }
 
   const totalMes = presupuestosMes.reduce((s, p) => s + p.monto_usd, 0)
 
   const historialPorMes = useMemo(() => {
-    const mapa: Record<string, Presupuesto[]> = {}
+    const mapa: Record<string, number> = {}
     for (const p of historialDepto) {
       const key = `${p.anio}-${String(p.mes).padStart(2, '0')}`
-      if (!mapa[key]) mapa[key] = []
-      mapa[key].push(p)
+      mapa[key] = (mapa[key] || 0) + p.monto_usd
     }
-    return Object.entries(mapa)
-      .sort(([a], [b]) => b.localeCompare(a))
-      .map(([periodo, presups]) => ({
-        periodo,
-        monto: presups.reduce((s, p) => s + p.monto_usd, 0),
-      }))
+    return Object.entries(mapa).sort(([a], [b]) => b.localeCompare(a))
   }, [historialDepto])
 
   const deptoNombre = deptoSeleccionado
@@ -191,63 +182,103 @@ export default function PresupuestosTab() {
     : ''
 
   return (
-    <div className="pestana-contenido">
-      <div className="form-tarjeta">
-        <div className="form-tarjeta-titulo">
-          <h3>Presupuestos del mes</h3>
-          <span className="form-tarjeta-total">{formatoUsd(totalMes)}</span>
+    <div className="presupuestos-layout">
+      <aside className="presupuestos-sidebar">
+        <div className="sidebar-header">
+          <h3>Unidades</h3>
+          {esAdmin && (
+            <button
+              type="button"
+              className="btn-primario btn-sm"
+              onClick={() => setModalDeptoAbierto(true)}
+            >
+              + Nueva
+            </button>
+          )}
         </div>
 
-        <div className="form-grid">
-          <label className="campo">
-            <span>Periodo</span>
+        <div className="sidebar-lista">
+          {departamentos.length === 0 ? (
+            <p className="sidebar-vacio">Sin unidades</p>
+          ) : (
+            departamentos.map((d) => {
+              const presupuesto = presupuestosMes.find((p) => p.departamento_id === d.id)
+              const seleccionado = deptoSeleccionado === d.id
+              return (
+                <div
+                  key={d.id}
+                  className={`sidebar-item ${seleccionado ? 'seleccionado' : ''}`}
+                  onClick={() => setDeptoSeleccionado(seleccionado ? null : d.id)}
+                >
+                  <div className="sidebar-item-info">
+                    <span className="sidebar-item-nombre">{d.nombre}</span>
+                    <span className="sidebar-item-monto">
+                      {formatoUsd(presupuesto?.monto_usd ?? 0)}
+                    </span>
+                  </div>
+                  {esAdmin && (
+                    <button
+                      type="button"
+                      className="sidebar-item-eliminar"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        void eliminarDepartamento(d)
+                      }}
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              )
+            })
+          )}
+        </div>
+      </aside>
+
+      <main className="presupuestos-main">
+        <div className="main-header">
+          <div className="main-header-info">
+            <h2>{nombreMes(anio, mes)}</h2>
+            <span className="main-total">{formatoUsd(totalMes)}</span>
+          </div>
+          <div className="main-header-acciones">
             <input
               type="month"
               value={periodo}
               onChange={(e) => setPeriodo(e.target.value)}
+              className="input-month"
             />
-          </label>
-        </div>
-
-        {esAdmin && (
-          <div className="presupuesto-acciones-rapidas">
-            <button
-              type="button"
-              className="btn-secundario btn-sm"
-              onClick={() => void copiarDesdeMesAnterior()}
-            >
-              ← Copiar desde mes anterior
-            </button>
+            {esAdmin && (
+              <button
+                type="button"
+                className="btn-secundario btn-sm"
+                onClick={() => void copiarDesdeMesAnterior()}
+              >
+                ← Copiar mes anterior
+              </button>
+            )}
           </div>
-        )}
+        </div>
 
         {error && <div className="alerta error">{error}</div>}
         {aviso && <div className="alerta exito">{aviso}</div>}
 
         <div className="tabla-contenedor">
           {cargandoMes ? (
-            <Cargando mensaje="Cargando presupuestos…" />
+            <Cargando mensaje="Cargando…" />
           ) : (
             <table className="tabla">
               <thead>
                 <tr>
-                  <th>Unidad presupuestaria</th>
+                  <th>Unidad</th>
                   <th className="td-der">Presupuesto (USD)</th>
                   {esAdmin && <th></th>}
                 </tr>
               </thead>
               <tbody>
                 {departamentos.map((d) => (
-                  <tr key={d.id}>
-                    <td>
-                      <button
-                        type="button"
-                        className="btn-enlace-tabla"
-                        onClick={() => setDeptoSeleccionado(deptoSeleccionado === d.id ? null : d.id)}
-                      >
-                        {d.nombre}
-                      </button>
-                    </td>
+                  <tr key={d.id} className={deptoSeleccionado === d.id ? 'fila-seleccionada' : ''}>
+                    <td>{d.nombre}</td>
                     <td className="td-der">
                       {esAdmin ? (
                         <input
@@ -283,85 +314,36 @@ export default function PresupuestosTab() {
             </table>
           )}
         </div>
-      </div>
 
-      {deptoSeleccionado && (
-        <div className="form-tarjeta">
-          <div className="form-tarjeta-titulo">
-            <h3>Historial: {deptoNombre}</h3>
-            <button
-              type="button"
-              className="btn-secundario btn-sm"
-              onClick={() => setDeptoSeleccionado(null)}
-            >
-              × Cerrar
-            </button>
-          </div>
-
-          <div className="tabla-contenedor">
-            {cargandoHistorial ? (
-              <Cargando mensaje="Cargando historial…" />
-            ) : historialPorMes.length === 0 ? (
-              <p className="vacio">Sin historial de presupuestos</p>
-            ) : (
-              <table className="tabla">
-                <thead>
-                  <tr>
-                    <th>Periodo</th>
-                    <th className="td-der">Presupuesto (USD)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {historialPorMes.map((h) => (
-                    <tr key={h.periodo}>
-                      <td>{h.periodo}</td>
-                      <td className="td-der">{formatoUsd(h.monto)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
-      )}
-
-      {esAdmin && (
-        <div className="form-tarjeta">
-          <div className="tarjeta-herramienta">
-            <div>
-              <h3>Unidades presupuestarias</h3>
-              <p>Departamentos para asignar presupuestos y registrar movimientos.</p>
+        {deptoSeleccionado && (
+          <div className="historial-panel">
+            <div className="historial-header">
+              <h3>Historial: {deptoNombre}</h3>
+              <button
+                type="button"
+                className="btn-secundario btn-sm"
+                onClick={() => setDeptoSeleccionado(null)}
+              >
+                ×
+              </button>
             </div>
-            <button
-              type="button"
-              className="btn-primario"
-              onClick={() => setModalDeptoAbierto(true)}
-            >
-              + Nueva unidad
-            </button>
+            <div className="historial-grid">
+              {cargandoHistorial ? (
+                <Cargando mensaje="Cargando…" />
+              ) : historialPorMes.length === 0 ? (
+                <p className="vacio">Sin historial</p>
+              ) : (
+                historialPorMes.map(([periodo, monto]) => (
+                  <div key={periodo} className="historial-item">
+                    <span className="historial-periodo">{periodo}</span>
+                    <strong className="historial-monto">{formatoUsd(monto)}</strong>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-
-          <div className="chip-lista">
-            {departamentos.length === 0 ? (
-              <p className="vacio">No hay unidades presupuestarias. Crea una para comenzar.</p>
-            ) : (
-              departamentos.map((d) => (
-                <span key={d.id} className="chip">
-                  {d.nombre}
-                  <button
-                    type="button"
-                    className="chip-eliminar"
-                    title="Eliminar"
-                    onClick={() => void eliminarDepartamento(d)}
-                  >
-                    ×
-                  </button>
-                </span>
-              ))
-            )}
-          </div>
-        </div>
-      )}
+        )}
+      </main>
 
       {modalDeptoAbierto && (
         <div className="modal-fondo" onClick={() => setModalDeptoAbierto(false)}>
@@ -373,12 +355,11 @@ export default function PresupuestosTab() {
                 <input
                   value={nuevoDepto}
                   onChange={(e) => setNuevoDepto(e.target.value)}
-                  placeholder="Ej. Logística, Marketing, Operaciones..."
+                  placeholder="Ej. Logística, Marketing..."
                   autoFocus
                   required
                 />
               </label>
-              {error && <div className="alerta error">{error}</div>}
               <div className="modal-acciones">
                 <button type="button" className="btn-secundario" onClick={() => setModalDeptoAbierto(false)}>
                   Cancelar
