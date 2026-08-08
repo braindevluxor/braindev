@@ -950,6 +950,90 @@ p {
   font-size: 0.9rem;
 }
 
+/* ---------- Paginación ---------- */
+.paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--gris-100);
+  background: var(--gris-50);
+  flex-wrap: wrap;
+}
+
+.paginacion-info {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  font-size: 0.85rem;
+  color: var(--gris-600);
+}
+
+.paginacion-tamano {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.paginacion-tamano span {
+  white-space: nowrap;
+}
+
+.paginacion-tamano select {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: #fff;
+  font-size: 0.85rem;
+  color: var(--gris-700);
+  cursor: pointer;
+  transition: all var(--transicion);
+}
+
+.paginacion-tamano select:hover {
+  border-color: var(--gris-300);
+}
+
+.paginacion-tamano select:focus {
+  outline: none;
+  border-color: var(--mod-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mod-color) 12%, transparent);
+}
+
+.paginacion-controles {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.paginacion-pagina {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gris-700);
+  padding: 0 0.5rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .paginacion {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .paginacion-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .paginacion-controles {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
 .badge-yo {
   margin-left: 0.5rem;
   font-size: 0.66rem;

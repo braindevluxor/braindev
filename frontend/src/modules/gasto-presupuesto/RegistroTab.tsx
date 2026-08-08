@@ -45,6 +45,8 @@ export default function RegistroTab() {
   const [enviando, setEnviando] = useState(false)
   const [editando, setEditando] = useState<Movimiento | null>(null)
   const [exitoForm, setExitoForm] = useState<string | null>(null)
+  const [paginaActual, setPaginaActual] = useState(1)
+  const [tamanoPagina, setTamanoPagina] = useState(100)
 
   const montoRef = useRef<HTMLInputElement>(null)
 
@@ -193,6 +195,20 @@ export default function RegistroTab() {
   }
 
   const puedeEditar = (m: Movimiento) => esAdmin || m.registrado_por === perfil?.id
+
+  const totalPaginas = Math.ceil(movimientos.length / tamanoPagina)
+  const indiceInicio = (paginaActual - 1) * tamanoPagina
+  const indiceFin = indiceInicio + tamanoPagina
+  const movimientosPagina = movimientos.slice(indiceInicio, indiceFin)
+
+  function cambiarPagina(nuevaPagina: number) {
+    setPaginaActual(nuevaPagina)
+  }
+
+  function cambiarTamanoPagina(nuevoTamano: number) {
+    setTamanoPagina(nuevoTamano)
+    setPaginaActual(1)
+  }
 
   if (vista === 'registrar') {
     return (
@@ -363,60 +379,119 @@ export default function RegistroTab() {
         ) : movimientos.length === 0 ? (
           <p className="vacio">Aún no hay movimientos registrados.</p>
         ) : (
-          <table className="tabla">
-            <thead>
-              <tr>
-                <th>Fecha</th>
-                <th>Tipo</th>
-                <th>Departamento</th>
-                <th>Concepto</th>
-                <th>Factura</th>
-                <th>Registrado</th>
-                <th className="td-der">Monto (USD)</th>
-                <th className="td-der">Bs</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {movimientos.map((m) => {
-                const dep = departamentosPorId.get(m.departamento_id)
-                return (
-                  <tr key={m.id}>
-                    <td>{formatoFecha(m.fecha)}</td>
-                    <td>
-                      <span className={`estado ${m.tipo === 'gasto' ? 'inactivo' : 'activo'}`}>
-                        {m.tipo === 'gasto' ? 'Gasto' : 'Ingreso'}
-                      </span>
-                    </td>
-                    <td>{dep?.nombre ?? '—'}</td>
-                    <td>{m.concepto || '—'}</td>
-                    <td>{m.numero_factura || '—'}</td>
-                    <td>{directorio[m.registrado_por] ?? 'Usuario'}</td>
-                    <td className="td-der">
-                      <strong>{formatoUsd(m.monto_usd)}</strong>
-                    </td>
-                    <td className="td-der td-secundario">{formatoBs(m.monto_bs)}</td>
-                    <td className="acciones">
-                      {puedeEditar(m) && (
-                        <button type="button" className="btn-enlace" onClick={() => iniciarEdicion(m)}>
-                          Editar
-                        </button>
-                      )}
-                      {puedeEditar(m) && (
-                        <button
-                          type="button"
-                          className="btn-enlace peligro"
-                          onClick={() => void eliminar(m)}
-                        >
-                          Eliminar
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+          <>
+            <table className="tabla">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Tipo</th>
+                  <th>Departamento</th>
+                  <th>Concepto</th>
+                  <th>Factura</th>
+                  <th>Registrado</th>
+                  <th className="td-der">Monto (USD)</th>
+                  <th className="td-der">Bs</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {movimientosPagina.map((m) => {
+                  const dep = departamentosPorId.get(m.departamento_id)
+                  return (
+                    <tr key={m.id}>
+                      <td>{formatoFecha(m.fecha)}</td>
+                      <td>
+                        <span className={`estado ${m.tipo === 'gasto' ? 'inactivo' : 'activo'}`}>
+                          {m.tipo === 'gasto' ? 'Gasto' : 'Ingreso'}
+                        </span>
+                      </td>
+                      <td>{dep?.nombre ?? '—'}</td>
+                      <td>{m.concepto || '—'}</td>
+                      <td>{m.numero_factura || '—'}</td>
+                      <td>{directorio[m.registrado_por] ?? 'Usuario'}</td>
+                      <td className="td-der">
+                        <strong>{formatoUsd(m.monto_usd)}</strong>
+                      </td>
+                      <td className="td-der td-secundario">{formatoBs(m.monto_bs)}</td>
+                      <td className="acciones">
+                        {puedeEditar(m) && (
+                          <button type="button" className="btn-enlace" onClick={() => iniciarEdicion(m)}>
+                            Editar
+                          </button>
+                        )}
+                        {puedeEditar(m) && (
+                          <button
+                            type="button"
+                            className="btn-enlace peligro"
+                            onClick={() => void eliminar(m)}
+                          >
+                            Eliminar
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+            <div className="paginacion">
+              <div className="paginacion-info">
+                <span>
+                  Mostrando {indiceInicio + 1} - {Math.min(indiceFin, movimientos.length)} de{' '}
+                  {movimientos.length} registros
+                </span>
+                <label className="paginacion-tamano">
+                  <span>Registros por página:</span>
+                  <select
+                    value={tamanoPagina}
+                    onChange={(e) => cambiarTamanoPagina(Number(e.target.value))}
+                  >
+                    <option value={100}>100</option>
+                    <option value={300}>300</option>
+                    <option value={500}>500</option>
+                    <option value={1000}>1000</option>
+                  </select>
+                </label>
+              </div>
+              <div className="paginacion-controles">
+                <button
+                  type="button"
+                  className="btn-secundario btn-sm"
+                  onClick={() => cambiarPagina(1)}
+                  disabled={paginaActual === 1}
+                >
+                  « Primera
+                </button>
+                <button
+                  type="button"
+                  className="btn-secundario btn-sm"
+                  onClick={() => cambiarPagina(paginaActual - 1)}
+                  disabled={paginaActual === 1}
+                >
+                  ← Anterior
+                </button>
+                <span className="paginacion-pagina">
+                  Página {paginaActual} de {totalPaginas}
+                </span>
+                <button
+                  type="button"
+                  className="btn-secundario btn-sm"
+                  onClick={() => cambiarPagina(paginaActual + 1)}
+                  disabled={paginaActual === totalPaginas}
+                >
+                  Siguiente →
+                </button>
+                <button
+                  type="button"
+                  className="btn-secundario btn-sm"
+                  onClick={() => cambiarPagina(totalPaginas)}
+                  disabled={paginaActual === totalPaginas}
+                >
+                  Última »
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>
