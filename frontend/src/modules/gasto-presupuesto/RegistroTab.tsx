@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import type { Departamento, Moneda, Movimiento, TipoMovimiento } from '../../types'
 import { gpService, type DatosMovimiento } from './services'
@@ -18,12 +18,16 @@ const MONEDAS: { valor: Moneda; etiqueta: string }[] = [
   { valor: 'VES', etiqueta: 'Bs' },
 ]
 
+type Vista = 'historial' | 'registrar'
+
 function hoyISO(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
 export default function RegistroTab({ departamentos }: Props) {
   const { perfil } = useAuth()
+
+  const [vista, setVista] = useState<Vista>('historial')
 
   const [tipo, setTipo] = useState<TipoMovimiento>('gasto')
   const [fecha, setFecha] = useState(hoyISO())
@@ -41,7 +45,9 @@ export default function RegistroTab({ departamentos }: Props) {
   const [aviso, setAviso] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
   const [editando, setEditando] = useState<Movimiento | null>(null)
-  const [formAbierto, setFormAbierto] = useState(false)
+  const [exitoForm, setExitoForm] = useState<string | null>(null)
+
+  const montoRef = useRef<HTMLInputElement>(null)
 
   const departamentosPorId = useMemo(
     () => new Map(departamentos.map((d) => [d.id, d])),
@@ -72,14 +78,6 @@ export default function RegistroTab({ departamentos }: Props) {
     void cargar()
   }, [cargar])
 
-  useEffect(() => {
-    function onTecla(e: KeyboardEvent) {
-      if (e.key === 'Escape') cerrarForm()
-    }
-    document.addEventListener('keydown', onTecla)
-    return () => document.removeEventListener('keydown', onTecla)
-  }, [formAbierto])
-
   const esAdmin = perfil?.role === 'admin'
 
   const montoNumero = Number.parseFloat(monto)
@@ -105,6 +103,8 @@ export default function RegistroTab({ departamentos }: Props) {
     setMoneda('USD')
     setTasa('')
     setEditando(null)
+    setExitoForm(null)
+    setError(null)
   }
 
   function mostrarAviso(msg: string) {
@@ -146,8 +146,18 @@ export default function RegistroTab({ departamentos }: Props) {
       setError(res.error.message)
       return
     }
-    mostrarAviso(editando ? 'Movimiento actualizado' : 'Movimiento registrado correctamente')
-    cerrarForm()
+
+    if (editando) {
+      mostrarAviso('Movimiento actualizado')
+      setVista('historial')
+      limpiarForm()
+    } else {
+      setExitoForm('Movimiento registrado correctamente')
+      setMonto('')
+      setTasa('')
+      setError(null)
+      montoRef.current?.focus()
+    }
     void cargar()
   }
 
@@ -162,18 +172,13 @@ export default function RegistroTab({ departamentos }: Props) {
     setMoneda(m.moneda)
     setTasa(String(m.tasa_cambio))
     setError(null)
-    setFormAbierto(true)
+    setExitoForm(null)
+    setVista('registrar')
   }
 
   function abrirNuevo() {
     limpiarForm()
-    setError(null)
-    setFormAbierto(true)
-  }
-
-  function cerrarForm() {
-    setFormAbierto(false)
-    limpiarForm()
+    setVista('registrar')
   }
 
   async function eliminar(m: Movimiento) {
@@ -190,6 +195,154 @@ export default function RegistroTab({ departamentos }: Props) {
 
   const puedeEditar = (m: Movimiento) => esAdmin || m.registrado_por === perfil?.id
 
+  if (vista === 'registrar') {
+    return (
+      <div className="pestana-contenido">
+        <div className="form-tarjeta registro-gasto">
+          <div className="form-tarjeta-titulo">
+            <div>
+              <h3>{editando ? 'Editar movimiento' : 'Registrar gasto o ingreso'}</h3>
+              <p>Completa los datos del movimiento y presiona el botón para guardarlo.</p>
+            </div>
+            <button type="button" className="btn-secundario" onClick={() => { setVista('historial'); limpiarForm() }}>
+              ← Volver al historial
+            </button>
+          </div>
+
+          {exitoForm && <div className="alerta exito">{exitoForm}</div>}
+
+          <form onSubmit={onSubmit} className="login-form" noValidate>
+            <div className="form-grid">
+              <label className="campo">
+                <span>Tipo</span>
+                <select value={tipo} onChange={(e) => setTipo(e.target.value as TipoMovimiento)}>
+                  {TIPOS.map((t) => (
+                    <option key={t.valor} value={t.valor}>
+                      {t.etiqueta}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="campo">
+                <span>Fecha</span>
+                <input
+                  type="date"
+                  value={fecha}
+                  onChange={(e) => setFecha(e.target.value)}
+                  required
+                />
+              </label>
+
+              <label className="campo">
+                <span>Departamento</span>
+                <select
+                  value={departamentoId}
+                  onChange={(e) => setDepartamentoId(e.target.value)}
+                  required
+                >
+                  <option value="">Seleccionar…</option>
+                  {departamentos.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.nombre}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="campo">
+                <span>Moneda</span>
+                <select value={moneda} onChange={(e) => setMoneda(e.target.value as Moneda)}>
+                  {MONEDAS.map((m) => (
+                    <option key={m.valor} value={m.valor}>
+                      {m.etiqueta}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="campo">
+                <span>Monto</span>
+                <input
+                  ref={montoRef}
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  min="0.01"
+                  value={monto}
+                  onChange={(e) => setMonto(e.target.value)}
+                  placeholder="0.00"
+                  required
+                />
+              </label>
+
+              <label className="campo">
+                <span>Tasa de cambio (Bs por USD)</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="0.0001"
+                  min="0.0001"
+                  value={tasa}
+                  onChange={(e) => setTasa(e.target.value)}
+                  placeholder="Ej. 36.50"
+                  required
+                />
+              </label>
+
+              <label className="campo">
+                <span>Concepto</span>
+                <input
+                  value={concepto}
+                  onChange={(e) => setConcepto(e.target.value)}
+                  placeholder="Descripción breve"
+                  required
+                />
+              </label>
+
+              <label className="campo">
+                <span>Nº de factura</span>
+                <input
+                  value={factura}
+                  onChange={(e) => setFactura(e.target.value)}
+                  placeholder="Opcional"
+                />
+              </label>
+            </div>
+
+            {conversion && (
+              <div className="resumen-conversion">
+                <div>
+                  <small>Valor en USD (primario)</small>
+                  <strong>{formatoUsd(conversion.usd)}</strong>
+                </div>
+                <div>
+                  <small>Conversión a Bs (secundario)</small>
+                  <strong>{formatoBs(conversion.bs)}</strong>
+                </div>
+              </div>
+            )}
+
+            {error && <div className="alerta error">{error}</div>}
+
+            <div className="form-acciones">
+              <button
+                type="button"
+                className="btn-secundario"
+                onClick={() => { setVista('historial'); limpiarForm() }}
+              >
+                Cancelar
+              </button>
+              <button type="submit" className="btn-primario" disabled={enviando}>
+                {enviando ? 'Guardando…' : editando ? 'Guardar cambios' : 'Registrar y continuar'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="pestana-contenido">
       <div className="tarjeta-herramienta">
@@ -203,6 +356,7 @@ export default function RegistroTab({ departamentos }: Props) {
       </div>
 
       {aviso && <div className="alerta exito">{aviso}</div>}
+      {error && <div className="alerta error">{error}</div>}
 
       <div className="tabla-contenedor">
         {cargando ? (
@@ -266,144 +420,6 @@ export default function RegistroTab({ departamentos }: Props) {
           </table>
         )}
       </div>
-
-      {formAbierto && (
-        <div className="modal-fondo" onClick={cerrarForm}>
-          <div className="modal modal-ancho" onClick={(e) => e.stopPropagation()}>
-            <h3>{editando ? 'Editar movimiento' : 'Registrar gasto o ingreso'}</h3>
-
-            <form onSubmit={onSubmit} className="login-form" noValidate>
-              <div className="form-grid">
-                <label className="campo">
-                  <span>Tipo</span>
-                  <select value={tipo} onChange={(e) => setTipo(e.target.value as TipoMovimiento)}>
-                    {TIPOS.map((t) => (
-                      <option key={t.valor} value={t.valor}>
-                        {t.etiqueta}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="campo">
-                  <span>Fecha</span>
-                  <input
-                    type="date"
-                    value={fecha}
-                    onChange={(e) => setFecha(e.target.value)}
-                    required
-                  />
-                </label>
-
-                <label className="campo">
-                  <span>Departamento</span>
-                  <select
-                    value={departamentoId}
-                    onChange={(e) => setDepartamentoId(e.target.value)}
-                    required
-                  >
-                    <option value="">Seleccionar…</option>
-                    {departamentos.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="campo">
-                  <span>Moneda</span>
-                  <select value={moneda} onChange={(e) => setMoneda(e.target.value as Moneda)}>
-                    {MONEDAS.map((m) => (
-                      <option key={m.valor} value={m.valor}>
-                        {m.etiqueta}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="campo">
-                  <span>Monto</span>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    step="0.01"
-                    min="0.01"
-                    value={monto}
-                    onChange={(e) => setMonto(e.target.value)}
-                    placeholder="0.00"
-                    required
-                  />
-                </label>
-
-                <label className="campo">
-                  <span>Tasa de cambio (Bs por USD)</span>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    step="0.0001"
-                    min="0.0001"
-                    value={tasa}
-                    onChange={(e) => setTasa(e.target.value)}
-                    placeholder="Ej. 36.50"
-                    required
-                  />
-                </label>
-
-                <label className="campo">
-                  <span>Concepto</span>
-                  <input
-                    value={concepto}
-                    onChange={(e) => setConcepto(e.target.value)}
-                    placeholder="Descripción breve"
-                    required
-                  />
-                </label>
-
-                <label className="campo">
-                  <span>Nº de factura</span>
-                  <input
-                    value={factura}
-                    onChange={(e) => setFactura(e.target.value)}
-                    placeholder="Opcional"
-                  />
-                </label>
-
-                <div className="campo campo-fijo">
-                  <span>Registrado por (no modificable)</span>
-                  <div className="campo-solo-lectura">
-                    {perfil?.full_name?.trim() || perfil?.email || '—'}
-                  </div>
-                </div>
-              </div>
-
-              {conversion && (
-                <div className="resumen-conversion">
-                  <div>
-                    <small>Valor en USD (primario)</small>
-                    <strong>{formatoUsd(conversion.usd)}</strong>
-                  </div>
-                  <div>
-                    <small>Conversión a Bs (secundario)</small>
-                    <strong>{formatoBs(conversion.bs)}</strong>
-                  </div>
-                </div>
-              )}
-
-              {error && <div className="alerta error">{error}</div>}
-
-              <div className="modal-acciones">
-                <button type="button" className="btn-secundario" onClick={cerrarForm}>
-                  Cancelar
-                </button>
-                <button type="submit" className="btn-primario" disabled={enviando}>
-                  {enviando ? 'Guardando…' : editando ? 'Guardar cambios' : 'Registrar'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
