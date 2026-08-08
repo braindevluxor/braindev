@@ -966,6 +966,35 @@ p {
   font-size: 0.9rem;
 }
 
+/* ---------- Búsqueda de movimientos ---------- */
+.busqueda-contenedor {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.busqueda-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--borde);
+  border-radius: 0.5rem;
+  font-size: 0.9375rem;
+  transition: border-color 0.15s ease;
+}
+
+.busqueda-input:focus {
+  outline: none;
+  border-color: var(--mod-color);
+  box-shadow: 0 0 0 3px var(--mod-color-soft);
+}
+
+.busqueda-resultado {
+  font-size: 0.875rem;
+  color: var(--gris-600);
+  white-space: nowrap;
+}
+
 /* ---------- Paginación ---------- */
 .paginacion {
   display: flex;

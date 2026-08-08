@@ -47,6 +47,7 @@ export default function RegistroTab() {
   const [exitoForm, setExitoForm] = useState<string | null>(null)
   const [paginaActual, setPaginaActual] = useState(1)
   const [tamanoPagina, setTamanoPagina] = useState(100)
+  const [busqueda, setBusqueda] = useState('')
 
   const montoRef = useRef<HTMLInputElement>(null)
 
@@ -196,10 +197,26 @@ export default function RegistroTab() {
 
   const puedeEditar = (m: Movimiento) => esAdmin || m.registrado_por === perfil?.id
 
-  const totalPaginas = Math.ceil(movimientos.length / tamanoPagina)
+  const movimientosFiltrados = useMemo(() => {
+    if (!busqueda.trim()) return movimientos
+    
+    const termino = busqueda.toLowerCase()
+    return movimientos.filter((m) => {
+      const dep = departamentosPorId.get(m.departamento_id)
+      return (
+        m.concepto.toLowerCase().includes(termino) ||
+        m.numero_factura.toLowerCase().includes(termino) ||
+        m.tipo.toLowerCase().includes(termino) ||
+        dep?.nombre.toLowerCase().includes(termino) ||
+        directorio[m.registrado_por]?.toLowerCase().includes(termino)
+      )
+    })
+  }, [movimientos, busqueda, departamentosPorId, directorio])
+
+  const totalPaginas = Math.ceil(movimientosFiltrados.length / tamanoPagina)
   const indiceInicio = (paginaActual - 1) * tamanoPagina
   const indiceFin = indiceInicio + tamanoPagina
-  const movimientosPagina = movimientos.slice(indiceInicio, indiceFin)
+  const movimientosPagina = movimientosFiltrados.slice(indiceInicio, indiceFin)
 
   function cambiarPagina(nuevaPagina: number) {
     setPaginaActual(nuevaPagina)
@@ -373,11 +390,33 @@ export default function RegistroTab() {
       {aviso && <div className="alerta exito">{aviso}</div>}
       {error && <div className="alerta error">{error}</div>}
 
+      <div className="busqueda-contenedor">
+        <input
+          type="text"
+          className="busqueda-input"
+          placeholder="Buscar por concepto, factura, departamento, tipo..."
+          value={busqueda}
+          onChange={(e) => {
+            setBusqueda(e.target.value)
+            setPaginaActual(1)
+          }}
+        />
+        {busqueda && (
+          <span className="busqueda-resultado">
+            {movimientosFiltrados.length} resultado{movimientosFiltrados.length !== 1 ? 's' : ''}
+          </span>
+        )}
+      </div>
+
       <div className="tabla-contenedor">
         {cargando ? (
           <Cargando mensaje="Cargando movimientos…" />
-        ) : movimientos.length === 0 ? (
-          <p className="vacio">Aún no hay movimientos registrados.</p>
+        ) : movimientosFiltrados.length === 0 ? (
+          <p className="vacio">
+            {busqueda
+              ? 'No se encontraron movimientos con ese criterio de búsqueda.'
+              : 'Aún no hay movimientos registrados.'}
+          </p>
         ) : (
           <>
             <table className="tabla">
@@ -437,8 +476,8 @@ export default function RegistroTab() {
             <div className="paginacion">
               <div className="paginacion-info">
                 <span>
-                  Mostrando {indiceInicio + 1} - {Math.min(indiceFin, movimientos.length)} de{' '}
-                  {movimientos.length} registros
+                  Mostrando {indiceInicio + 1} - {Math.min(indiceFin, movimientosFiltrados.length)} de{' '}
+                  {movimientosFiltrados.length} registros
                 </span>
                 <label className="paginacion-tamano">
                   <span>Registros por página:</span>
