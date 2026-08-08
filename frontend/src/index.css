@@ -1519,6 +1519,39 @@ p {
 }
 
 /* ---------- Tarjetas KPI (Reportes) ---------- */
+.grafico-exportar {
+  display: none;
+}
+
+.titulo-acciones {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.reporte-titulo-pdf {
+  margin-bottom: 1.25rem;
+}
+
+.reporte-titulo-pdf h3 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--gris-900);
+  margin: 0;
+}
+
+.reporte-titulo-pdf p {
+  margin-top: 0.35rem;
+  color: var(--gris-500);
+  font-size: 0.85rem;
+}
+
+.reporte-titulo-pdf strong {
+  color: var(--gris-800);
+}
+
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
@@ -1580,6 +1613,105 @@ p {
 .kpi-cuerpo small {
   color: var(--gris-500);
   font-size: 0.78rem;
+}
+
+.kpi-tooltip-contenedor {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: max-content;
+  max-width: 100%;
+}
+
+.kpi-info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--gris-400);
+  cursor: help;
+  flex: none;
+}
+
+.kpi-info-btn svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.kpi-info-btn:hover {
+  color: var(--gris-600);
+}
+
+.kpi-tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  right: 0;
+  z-index: 40;
+  width: 250px;
+  padding: 0.8rem 0.9rem;
+  background-color: #0f172a;
+  color: #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.35);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  text-align: left;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px);
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+  pointer-events: none;
+}
+
+.kpi-tooltip-contenedor:hover .kpi-tooltip,
+.kpi-tooltip-contenedor:focus-within .kpi-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.kpi-cuerpo .kpi-tooltip-titulo {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #f1f5f9;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.kpi-tooltip-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.15rem 0;
+}
+
+.kpi-tooltip-fila strong {
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0;
+  color: #f1f5f9;
+}
+
+.kpi-tooltip-bs {
+  display: block;
+  margin-top: 0.5rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
+  font-size: 0.72rem;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .kpi-gasto .kpi-icono {

@@ -1,6 +1,7 @@
-import { IconoGasto, IconoIngreso, IconoSuperavit, IconoOperaciones } from '@/components/pestanaIconos'
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import type { Departamento, Movimiento, Presupuesto } from '../../types'
+import { IconoGasto, IconoIngreso, IconoSuperavit, IconoOperaciones, IconoInfo } from '@/components/pestanaIconos'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import * as XLSX from 'xlsx'
+import type { CentroCosto, Departamento, Movimiento, Presupuesto, RazonSocial } from '../../types'
 import { gpService } from './services'
 import {
   anioMesActual,
@@ -296,6 +297,15 @@ function GraficoCurvas({ filas }: { filas: FilaReporte[] }) {
   )
 }
 
+function escapeHtml(valor: string | number): string {
+  return String(valor)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 export default function ReportesTab() {
   const { departamentos } = useContextoGastoPresupuesto()
   const [tipoPeriodo, setTipoPeriodo] = useState<TipoPeriodo>('mes')
@@ -308,8 +318,12 @@ export default function ReportesTab() {
 
   const [movimientos, setMovimientos] = useState<Movimiento[]>([])
   const [presupuestos, setPresupuestos] = useState<Presupuesto[]>([])
+  const [razonesSociales, setRazonesSociales] = useState<RazonSocial[]>([])
+  const [centrosCosto, setCentrosCosto] = useState<CentroCosto[]>([])
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [exportando, setExportando] = useState(false)
+  const graficoExportRef = useRef<HTMLDivElement>(null)
 
   const rango = useMemo(() => {
     if (tipoPeriodo === 'mes') {
@@ -332,12 +346,19 @@ export default function ReportesTab() {
     setCargando(true)
     setError(null)
 
-    const [resMov, resPres] = rango
+    const [resMov, resPres, resRazones, resCentros] = rango
       ? await Promise.all([
           gpService.listarMovimientosRango(rango.desde, rango.hasta),
           gpService.listarPresupuestosTodos(),
+          gpService.listarRazonesSociales(),
+          gpService.listarCentrosCosto(),
         ])
-      : await Promise.all([gpService.listarMovimientos(), gpService.listarPresupuestosTodos()])
+      : await Promise.all([
+          gpService.listarMovimientos(),
+          gpService.listarPresupuestosTodos(),
+          gpService.listarRazonesSociales(),
+          gpService.listarCentrosCosto(),
+        ])
 
     if (resMov.error) {
       setError(resMov.error.message)
@@ -351,6 +372,8 @@ export default function ReportesTab() {
     } else {
       setPresupuestos(resPres.data ?? [])
     }
+    if (!resRazones.error) setRazonesSociales(resRazones.data ?? [])
+    if (!resCentros.error) setCentrosCosto(resCentros.data ?? [])
     setPagina(1)
     setCargando(false)
   }, [rango])
@@ -434,8 +457,16 @@ export default function ReportesTab() {
     return { presupuesto, gasto, ingreso, gastoBs, ingresoBs }
   }, [filas, movimientos])
 
-  const superavit = totales.ingreso - totales.gasto
-  const superavitBs = totales.ingresoBs - totales.gastoBs
+  const tasaPromedio = useMemo(() => {
+    const conTasa = movimientos.filter((m) => m.tasa_cambio > 0 && m.monto_usd > 0)
+    const sumaUsd = conTasa.reduce((s, m) => s + m.monto_usd, 0)
+    if (sumaUsd === 0) return null
+    return conTasa.reduce((s, m) => s + m.tasa_cambio * m.monto_usd, 0) / sumaUsd
+  }, [movimientos])
+
+  const superavit = totales.presupuesto + totales.ingreso - totales.gasto
+  const superavitBs =
+    totales.ingresoBs - totales.gastoBs + (tasaPromedio ? totales.presupuesto * tasaPromedio : 0)
 
   const conMovimientos = movimientos.length > 0
 
@@ -460,11 +491,209 @@ export default function ReportesTab() {
     return 'todo el historial'
   }, [tipoPeriodo, periodo, anio, desde, hasta])
 
+  function nombreBasePeriodo(): string {
+    return etiquetaPeriodo
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/gi, '-')
+      .replace(/^-+|-+$/g, '')
+  }
+
+  function exportarPDF() {
+    if (exportando) return
+    setExportando(true)
+    setError(null)
+
+    const svgEl = graficoExportRef.current?.querySelector('svg')
+    const svgMarkup = svgEl
+      ? new XMLSerializer().serializeToString(svgEl).replace(/^<svg /, '<svg xmlns="http://www.w3.org/2000/svg" ')
+      : ''
+
+    const filasHtml = filas
+      .map((f) => {
+        const pct = f.porcentaje
+        let uso = '—'
+        let color = '#64748b'
+        if (pct !== null) {
+          uso = `${pct.toFixed(0)}%`
+          color = pct > 100 ? '#dc2626' : pct > 85 ? '#d97706' : pct > 60 ? '#ca8a04' : '#16a34a'
+        }
+        return `<tr>
+            <td>${escapeHtml(f.departamento.nombre)}</td>
+            <td class="num">${escapeHtml(formatoUsd(f.presupuesto))}</td>
+            <td class="num">${escapeHtml(formatoUsd(f.gasto))}</td>
+            <td class="num">${escapeHtml(formatoUsd(f.ingreso))}</td>
+            <td class="num ${f.saldo < 0 ? 'neg' : ''}">${escapeHtml(formatoUsd(f.saldo))}</td>
+            <td class="num"><span class="uso" style="color:${color}">${uso}</span></td>
+          </tr>`
+      })
+      .join('')
+
+    const kpiSuperavitNeg = superavit < 0 ? ' neg' : ''
+    const kpiSuperavitBsNeg = superavitBs < 0 ? ' neg' : ''
+
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Reporte gasto vs presupuesto - ${escapeHtml(etiquetaPeriodo)}</title>
+<style>
+  @page { size: A4; margin: 11mm; }
+  * { box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, Helvetica, sans-serif; color: #1e293b; font-size: 12px; line-height: 1.4; margin: 0; }
+  h1 { font-size: 21px; margin: 0 0 2px; }
+  .meta { color: #64748b; font-size: 11px; margin-bottom: 16px; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 18px; }
+  .kpi { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; }
+  .kpi .label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: #64748b; font-weight: 700; }
+  .kpi .val { font-size: 17px; font-weight: 700; margin-top: 2px; white-space: nowrap; }
+  .kpi .bs { font-size: 10px; color: #64748b; }
+  .neg { color: #dc2626 !important; }
+  h2 { font-size: 14px; margin: 18px 0 8px; border-bottom: 2px solid #e2e8f0; padding-bottom: 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  th { text-align: left; background: #f1f5f9; padding: 6px 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: #475569; border-bottom: 2px solid #e2e8f0; }
+  td { padding: 5px 8px; border-bottom: 1px solid #e2e8f0; }
+  tbody tr:nth-child(even) { background: #f8fafc; }
+  .num { text-align: right; }
+  .uso { font-weight: 700; }
+  .chart svg { width: 100%; height: auto; }
+  .nota { margin-top: 14px; font-size: 10px; color: #94a3b8; }
+</style>
+</head>
+<body>
+  <h1>Reporte de gasto vs presupuesto</h1>
+  <div class="meta">Periodo: <strong>${escapeHtml(etiquetaPeriodo)}</strong> &middot; Generado el ${escapeHtml(formatoFecha(hoyISO()))}</div>
+
+  <div class="kpis">
+    <div class="kpi">
+      <div class="label">Total de gasto</div>
+      <div class="val">${escapeHtml(formatoUsd(totales.gasto))}</div>
+      <div class="bs">${escapeHtml(formatoBs(totales.gastoBs))}</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Total de ingreso</div>
+      <div class="val">${escapeHtml(formatoUsd(totales.ingreso))}</div>
+      <div class="bs">${escapeHtml(formatoBs(totales.ingresoBs))}</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Super&aacute;vit</div>
+      <div class="val${kpiSuperavitNeg}">${escapeHtml(formatoUsd(superavit))}</div>
+      <div class="bs${kpiSuperavitBsNeg}">${escapeHtml(formatoBs(superavitBs))}</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Operaciones</div>
+      <div class="val">${movimientos.length}</div>
+      <div class="bs">${filas.reduce((s, f) => s + (f.gasto > 0 ? 1 : 0), 0)} de gasto &middot; ${filas.reduce((s, f) => s + (f.ingreso > 0 ? 1 : 0), 0)} de ingreso</div>
+    </div>
+  </div>
+
+  <h2>Comparaci&oacute;n por departamento</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Departamento</th>
+        <th class="num">Presupuesto</th>
+        <th class="num">Gasto</th>
+        <th class="num">Ingreso</th>
+        <th class="num">Saldo</th>
+        <th class="num">Uso del presupuesto</th>
+      </tr>
+    </thead>
+    <tbody>${filasHtml}</tbody>
+  </table>
+
+  <h2>Gr&aacute;fico de gasto vs presupuesto</h2>
+  <div class="chart">${svgMarkup || '<p>No hay datos para graficar.</p>'}</div>
+
+  <div class="nota">Los movimientos del periodo se exportan a Excel desde la aplicaci&oacute;n.</div>
+</body>
+</html>`
+
+    const iframe = document.createElement('iframe')
+    iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;'
+    document.body.appendChild(iframe)
+    try {
+      const doc = iframe.contentDocument
+      if (!doc) throw new Error('No se pudo crear el documento de impresión')
+      doc.open()
+      doc.write(html)
+      doc.close()
+      iframe.contentWindow?.focus()
+      iframe.contentWindow?.print()
+    } catch (err) {
+      console.error('Error al exportar el PDF:', err)
+      setError('No se pudo generar el PDF. Revisa la consola para más detalles.')
+    } finally {
+      window.setTimeout(() => {
+        iframe.remove()
+        setExportando(false)
+      }, 1500)
+    }
+  }
+
+  function exportarExcel() {
+    if (movimientos.length === 0 || exportando) return
+    const nombreDep = new Map(departamentos.map((d) => [d.id, d.nombre]))
+    const nombreRazon = new Map(razonesSociales.map((r) => [r.id, r.nombre]))
+    const filas = movimientos.map((m) => {
+      const centro = centrosCosto.find((c) => c.id === m.centro_costo_id)
+      return {
+        Fecha: formatoFecha(m.fecha),
+        Tipo: m.tipo === 'gasto' ? 'Gasto' : 'Ingreso',
+        Departamento: nombreDep.get(m.departamento_id) ?? '—',
+        'Razón social': centro ? (nombreRazon.get(centro.razon_social_id) ?? '—') : '—',
+        'Centro de costo': centro ? centro.nombre : '—',
+        Concepto: m.concepto || '—',
+        'N° Factura': m.numero_factura || '—',
+        Monto: m.monto,
+        Moneda: m.moneda,
+        'Tasa (Bs/USD)': m.tasa_cambio,
+        'Monto USD': m.monto_usd,
+        'Monto Bs': m.monto_bs,
+      }
+    })
+    const ws = XLSX.utils.json_to_sheet(filas)
+    ws['!cols'] = [
+      { wch: 12 },
+      { wch: 8 },
+      { wch: 18 },
+      { wch: 18 },
+      { wch: 18 },
+      { wch: 28 },
+      { wch: 12 },
+      { wch: 10 },
+      { wch: 8 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 14 },
+    ]
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Movimientos')
+    XLSX.writeFile(wb, `movimientos-${nombreBasePeriodo() || 'periodo'}.xlsx`)
+  }
+
   return (
     <div className="pestana-contenido">
       <div className="form-tarjeta">
         <div className="form-tarjeta-titulo">
           <h3>Reporte de gasto vs presupuesto</h3>
+          <div className="titulo-acciones">
+            <button
+              type="button"
+              className="btn-secundario btn-sm"
+              onClick={exportarExcel}
+              disabled={exportando || cargando || !conMovimientos}
+            >
+              Exportar Excel
+            </button>
+            <button
+              type="button"
+              className="btn-primario btn-sm"
+              onClick={exportarPDF}
+              disabled={exportando || cargando || !conMovimientos}
+            >
+              {exportando ? 'Exportando…' : 'Exportar PDF'}
+            </button>
+          </div>
         </div>
 
         <div className="form-grid filtros-grid">
@@ -529,7 +758,15 @@ export default function ReportesTab() {
           <p className="vacio">No hay movimientos en este periodo.</p>
         ) : (
           <>
-            <div className="kpi-grid">
+            <div className="reporte-exportar">
+              <div className="reporte-titulo-pdf">
+                <h3>Reporte de gasto vs presupuesto</h3>
+                <p>
+                  Periodo: <strong>{etiquetaPeriodo}</strong> · Generado el{' '}
+                  {formatoFecha(hoyISO())}
+                </p>
+              </div>
+              <div className="kpi-grid">
               <div className="kpi-card kpi-gasto">
                 <span className="kpi-icono">
                   <IconoGasto />
@@ -555,7 +792,38 @@ export default function ReportesTab() {
                   <IconoSuperavit />
                 </span>
                 <div className="kpi-cuerpo">
-                  <span>Superávit</span>
+                  <div className="kpi-tooltip-contenedor">
+                    <span>Superávit</span>
+                    <button
+                      type="button"
+                      className="kpi-info-btn"
+                      aria-label="Ver desglose del superávit"
+                    >
+                      <IconoInfo />
+                    </button>
+                    <div className="kpi-tooltip" role="tooltip">
+                      <strong className="kpi-tooltip-titulo">
+                        Superávit = (Presupuesto + Ingresos) − Gastos
+                      </strong>
+                      <div className="kpi-tooltip-fila">
+                        <span>Presupuesto</span>
+                        <strong>{formatoUsd(totales.presupuesto)}</strong>
+                      </div>
+                      <div className="kpi-tooltip-fila">
+                        <span>Ingresos</span>
+                        <strong>{formatoUsd(totales.ingreso)}</strong>
+                      </div>
+                      <div className="kpi-tooltip-fila">
+                        <span>Gastos</span>
+                        <strong>{formatoUsd(totales.gasto)}</strong>
+                      </div>
+                      <div className="kpi-tooltip-fila">
+                        <span>Superávit</span>
+                        <strong>{formatoUsd(superavit)}</strong>
+                      </div>
+                      <small className="kpi-tooltip-bs">≈ {formatoBs(superavitBs)}</small>
+                    </div>
+                  </div>
                   <strong className={superavit < 0 ? 'texto-negativo' : ''}>
                     {formatoUsd(superavit)}
                   </strong>
@@ -637,6 +905,11 @@ export default function ReportesTab() {
               </table>
             </div>
             )}
+            </div>
+
+            <div className="grafico-exportar" ref={graficoExportRef} aria-hidden="true">
+              <GraficoCurvas filas={filas} />
+            </div>
 
             <p className="nota-ayuda">
               Movimientos del periodo ({movimientos.length} registros, máx.{' '}
