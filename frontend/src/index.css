@@ -1862,6 +1862,36 @@ p {
   border-radius: var(--radio);
 }
 
+/* ---------- Total en título de tarjeta ---------- */
+.form-tarjeta-total {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--mod-color-dark);
+  background-color: var(--mod-color-soft);
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radio);
+}
+
+/* ---------- Botón enlace en tabla ---------- */
+.btn-enlace-tabla {
+  background: none;
+  border: none;
+  color: var(--mod-color);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+}
+
+.btn-enlace-tabla:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Input tabla alineado a la derecha ---------- */
+.input-tabla-der {
+  text-align: right;
+}
+
 /* ---------- Resumen anual de presupuestos ---------- */
 .resumen-anio-grid {
   display: grid;

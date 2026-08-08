@@ -197,6 +197,20 @@ export const gpService = {
     }
   },
 
+  async listarPresupuestosDepartamento(departamentoId: string): Promise<RespuestaBackend<Presupuesto[]>> {
+    const { data, error } = await supabase
+      .from('presupuestos')
+      .select('*')
+      .eq('departamento_id', departamentoId)
+      .order('anio', { ascending: false })
+      .order('mes', { ascending: false })
+    if (error) return { data: null, error: { message: error.message } }
+    return {
+      data: ((data ?? []) as Record<string, unknown>[]).map(mapearPresupuesto),
+      error: null,
+    }
+  },
+
   async copiarPresupuesto(
     departamentoId: string,
     anioOrigen: number,
