@@ -1811,8 +1811,8 @@ p {
 
 .grafico-svg {
   width: 100%;
-  height: auto;
-  max-height: 320px;
+  height: 320px;
+  display: block;
 }
 
 .grafico-leyenda {

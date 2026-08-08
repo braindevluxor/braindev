@@ -96,15 +96,11 @@ function generarCurvaSuave(puntos: { x: number; y: number }[]): string {
 }
 
 function GraficoCurvas({ filas }: { filas: FilaReporte[] }) {
-  const ancho = 600
-  const alto = 300
-  const margen = { top: 20, right: 20, bottom: 60, left: 60 }
+  const ancho = 800
+  const alto = 400
+  const margen = { top: 30, right: 30, bottom: 80, left: 80 }
   const anchoGrafico = ancho - margen.left - margen.right
   const altoGrafico = alto - margen.top - margen.bottom
-
-  const maxGasto = Math.max(...filas.map((f) => f.gasto), 1)
-  const maxPresupuesto = Math.max(...filas.map((f) => f.presupuesto), 1)
-  const maxValor = Math.max(maxGasto, maxPresupuesto) * 1.1
 
   const filasConDatos = filas.filter((f) => f.gasto > 0 || f.presupuesto > 0)
 
@@ -112,16 +108,24 @@ function GraficoCurvas({ filas }: { filas: FilaReporte[] }) {
     return <p className="vacio">No hay datos para graficar.</p>
   }
 
-  const pasoX = filasConDatos.length > 1 ? anchoGrafico / (filasConDatos.length - 1) : 0
+  const maxGasto = Math.max(...filasConDatos.map((f) => f.gasto))
+  const maxPresupuesto = Math.max(...filasConDatos.map((f) => f.presupuesto))
+  const maxValor = Math.max(maxGasto, maxPresupuesto, 1) * 1.15
+
+  const pasoX = filasConDatos.length > 1 ? anchoGrafico / (filasConDatos.length - 1) : anchoGrafico / 2
 
   const puntosGasto = filasConDatos.map((f, i) => ({
-    x: margen.left + i * pasoX,
+    x: margen.left + (filasConDatos.length > 1 ? i * pasoX : anchoGrafico / 2),
     y: margen.top + altoGrafico - (f.gasto / maxValor) * altoGrafico,
+    valor: f.gasto,
+    departamento: f.departamento.nombre,
   }))
 
   const puntosPresupuesto = filasConDatos.map((f, i) => ({
-    x: margen.left + i * pasoX,
+    x: margen.left + (filasConDatos.length > 1 ? i * pasoX : anchoGrafico / 2),
     y: margen.top + altoGrafico - (f.presupuesto / maxValor) * altoGrafico,
+    valor: f.presupuesto,
+    departamento: f.departamento.nombre,
   }))
 
   const curvaGasto = generarCurvaSuave(puntosGasto)
@@ -131,7 +135,9 @@ function GraficoCurvas({ filas }: { filas: FilaReporte[] }) {
 
   return (
     <div className="grafico-contenedor">
-      <svg viewBox={`0 0 ${ancho} ${alto}`} className="grafico-svg">
+      <svg viewBox={`0 0 ${ancho} ${alto}`} className="grafico-svg" preserveAspectRatio="xMidYMid meet">
+        <rect x={margen.left} y={margen.top} width={anchoGrafico} height={altoGrafico} fill="#f8fafc" />
+
         {lineasY.map((pct, i) => {
           const y = margen.top + altoGrafico - pct * altoGrafico
           return (
@@ -141,17 +147,16 @@ function GraficoCurvas({ filas }: { filas: FilaReporte[] }) {
                 y1={y}
                 x2={ancho - margen.right}
                 y2={y}
-                stroke="currentColor"
-                strokeOpacity={0.1}
+                stroke="#cbd5e1"
+                strokeWidth="1"
                 strokeDasharray="4,4"
               />
               <text
-                x={margen.left - 8}
+                x={margen.left - 10}
                 y={y + 4}
                 textAnchor="end"
-                fontSize="10"
-                fill="currentColor"
-                fillOpacity={0.5}
+                fontSize="12"
+                fill="#64748b"
               >
                 {formatoUsd(maxValor * pct)}
               </text>
@@ -159,13 +164,30 @@ function GraficoCurvas({ filas }: { filas: FilaReporte[] }) {
           )
         })}
 
+        <line
+          x1={margen.left}
+          y1={margen.top + altoGrafico}
+          x2={ancho - margen.right}
+          y2={margen.top + altoGrafico}
+          stroke="#334155"
+          strokeWidth="2"
+        />
+        <line
+          x1={margen.left}
+          y1={margen.top}
+          x2={margen.left}
+          y2={margen.top + altoGrafico}
+          stroke="#334155"
+          strokeWidth="2"
+        />
+
         {curvaPresupuesto && (
           <path
             d={curvaPresupuesto}
             fill="none"
             stroke="#10b981"
-            strokeWidth="2.5"
-            strokeDasharray="6,4"
+            strokeWidth="3"
+            strokeDasharray="8,4"
           />
         )}
 
@@ -174,33 +196,32 @@ function GraficoCurvas({ filas }: { filas: FilaReporte[] }) {
             d={curvaGasto}
             fill="none"
             stroke="#ef4444"
-            strokeWidth="2.5"
+            strokeWidth="3"
           />
         )}
 
         {puntosPresupuesto.map((p, i) => (
-          <circle key={`pres-${i}`} cx={p.x} cy={p.y} r="4" fill="#10b981" />
+          <circle key={`pres-${i}`} cx={p.x} cy={p.y} r="6" fill="#10b981" stroke="#fff" strokeWidth="2" />
         ))}
 
         {puntosGasto.map((p, i) => (
-          <circle key={`gas-${i}`} cx={p.x} cy={p.y} r="4" fill="#ef4444" />
+          <circle key={`gas-${i}`} cx={p.x} cy={p.y} r="6" fill="#ef4444" stroke="#fff" strokeWidth="2" />
         ))}
 
         {filasConDatos.map((f, i) => {
-          const x = margen.left + i * pasoX
+          const x = margen.left + (filasConDatos.length > 1 ? i * pasoX : anchoGrafico / 2)
           return (
             <text
               key={f.departamento.id}
               x={x}
-              y={alto - margen.bottom + 20}
+              y={margen.top + altoGrafico + 25}
               textAnchor="middle"
-              fontSize="10"
-              fill="currentColor"
-              fillOpacity={0.7}
-              transform={`rotate(-30, ${x}, ${alto - margen.bottom + 20})`}
+              fontSize="11"
+              fill="#334155"
+              fontWeight="600"
             >
-              {f.departamento.nombre.length > 12
-                ? f.departamento.nombre.slice(0, 12) + '...'
+              {f.departamento.nombre.length > 15
+                ? f.departamento.nombre.slice(0, 15) + '...'
                 : f.departamento.nombre}
             </text>
           )
