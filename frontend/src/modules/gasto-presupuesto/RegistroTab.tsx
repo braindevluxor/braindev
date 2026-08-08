@@ -48,6 +48,8 @@ export default function RegistroTab() {
   const [paginaActual, setPaginaActual] = useState(1)
   const [tamanoPagina, setTamanoPagina] = useState(100)
   const [busqueda, setBusqueda] = useState('')
+  const [conceptosDisponibles, setConceptosDisponibles] = useState<string[]>([])
+  const [erroresCampos, setErroresCampos] = useState<Record<string, string>>({})
 
   const montoRef = useRef<HTMLInputElement>(null)
 
@@ -80,6 +82,18 @@ export default function RegistroTab() {
     void cargar()
   }, [cargar])
 
+  useEffect(() => {
+    if (departamentoId) {
+      gpService.obtenerConceptosDepartamento(departamentoId).then((res) => {
+        if (!res.error && res.data) {
+          setConceptosDisponibles(res.data)
+        }
+      })
+    } else {
+      setConceptosDisponibles([])
+    }
+  }, [departamentoId])
+
   const esAdmin = perfil?.role === 'admin'
 
   const montoNumero = Number.parseFloat(monto)
@@ -107,6 +121,7 @@ export default function RegistroTab() {
     setEditando(null)
     setExitoForm(null)
     setError(null)
+    setErroresCampos({})
   }
 
   function mostrarAviso(msg: string) {
@@ -117,14 +132,23 @@ export default function RegistroTab() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
+    setErroresCampos({})
 
-    if (!departamentoId) return setError('Selecciona un departamento')
-    if (!concepto.trim()) return setError('Escribe el concepto')
+    const nuevosErrores: Record<string, string> = {}
+
+    if (!departamentoId) nuevosErrores.departamentoId = 'Selecciona un departamento'
+    if (!concepto.trim()) nuevosErrores.concepto = 'Escribe el concepto'
+    if (!factura.trim()) nuevosErrores.factura = 'Ingresa el número de factura'
     if (!Number.isFinite(montoNumero) || montoNumero <= 0) {
-      return setError('Ingresa un monto válido mayor a 0')
+      nuevosErrores.monto = 'Ingresa un monto válido mayor a 0'
     }
     if (!Number.isFinite(tasaNumero) || tasaNumero <= 0) {
-      return setError('Ingresa una tasa de cambio mayor a 0')
+      nuevosErrores.tasa = 'Ingresa una tasa de cambio mayor a 0'
+    }
+
+    if (Object.keys(nuevosErrores).length > 0) {
+      setErroresCampos(nuevosErrores)
+      return
     }
 
     const datos: DatosMovimiento = {
@@ -139,6 +163,12 @@ export default function RegistroTab() {
     }
 
     setEnviando(true)
+    
+    // Guardar concepto si es nuevo
+    if (!editando && !conceptosDisponibles.includes(concepto.trim())) {
+      await gpService.agregarConceptoDepartamento(departamentoId, concepto.trim())
+    }
+    
     const res = editando
       ? await gpService.actualizarMovimiento(editando.id, datos)
       : await gpService.crearMovimiento(datos)
@@ -155,10 +185,8 @@ export default function RegistroTab() {
       limpiarForm()
     } else {
       setExitoForm('Movimiento registrado correctamente')
-      setMonto('')
-      setTasa('')
+      limpiarForm()
       setError(null)
-      montoRef.current?.focus()
     }
     void cargar()
   }
@@ -234,7 +262,7 @@ export default function RegistroTab() {
           <div className="form-tarjeta-titulo">
             <div>
               <h3>{editando ? 'Editar movimiento' : 'Registrar gasto o ingreso'}</h3>
-              <p>Completa los datos del movimiento y presiona el botón para guardarlo.</p>
+              <p>Todos los campos son obligatorios. Los conceptos se guardan por departamento para reutilización.</p>
             </div>
             <button type="button" className="btn-secundario" onClick={() => { setVista('historial'); limpiarForm() }}>
               ← Volver al historial
@@ -246,7 +274,7 @@ export default function RegistroTab() {
           <form onSubmit={onSubmit} className="login-form" noValidate>
             <div className="form-grid">
               <label className="campo">
-                <span>Tipo</span>
+                <span>Tipo *</span>
                 <select value={tipo} onChange={(e) => setTipo(e.target.value as TipoMovimiento)}>
                   {TIPOS.map((t) => (
                     <option key={t.valor} value={t.valor}>
@@ -257,7 +285,7 @@ export default function RegistroTab() {
               </label>
 
               <label className="campo">
-                <span>Fecha</span>
+                <span>Fecha *</span>
                 <input
                   type="date"
                   value={fecha}
@@ -267,10 +295,16 @@ export default function RegistroTab() {
               </label>
 
               <label className="campo">
-                <span>Departamento</span>
+                <span>Departamento *</span>
                 <select
+                  className={erroresCampos.departamentoId ? 'campo-error' : ''}
                   value={departamentoId}
-                  onChange={(e) => setDepartamentoId(e.target.value)}
+                  onChange={(e) => {
+                    setDepartamentoId(e.target.value)
+                    if (erroresCampos.departamentoId) {
+                      setErroresCampos((prev) => ({ ...prev, departamentoId: '' }))
+                    }
+                  }}
                   required
                 >
                   <option value="">Seleccionar…</option>
@@ -280,10 +314,13 @@ export default function RegistroTab() {
                     </option>
                   ))}
                 </select>
+                {erroresCampos.departamentoId && (
+                  <span className="campo-error-msg">{erroresCampos.departamentoId}</span>
+                )}
               </label>
 
               <label className="campo">
-                <span>Moneda</span>
+                <span>Moneda *</span>
                 <select value={moneda} onChange={(e) => setMoneda(e.target.value as Moneda)}>
                   {MONEDAS.map((m) => (
                     <option key={m.valor} value={m.valor}>
@@ -294,51 +331,94 @@ export default function RegistroTab() {
               </label>
 
               <label className="campo">
-                <span>Monto</span>
+                <span>Monto *</span>
                 <input
                   ref={montoRef}
+                  className={erroresCampos.monto ? 'campo-error' : ''}
                   type="number"
                   inputMode="decimal"
                   step="0.01"
                   min="0.01"
                   value={monto}
-                  onChange={(e) => setMonto(e.target.value)}
+                  onChange={(e) => {
+                    setMonto(e.target.value)
+                    if (erroresCampos.monto) {
+                      setErroresCampos((prev) => ({ ...prev, monto: '' }))
+                    }
+                  }}
                   placeholder="0.00"
                   required
                 />
+                {erroresCampos.monto && (
+                  <span className="campo-error-msg">{erroresCampos.monto}</span>
+                )}
               </label>
 
               <label className="campo">
-                <span>Tasa de cambio (Bs por USD)</span>
+                <span>Tasa de cambio (Bs por USD) *</span>
                 <input
+                  className={erroresCampos.tasa ? 'campo-error' : ''}
                   type="number"
                   inputMode="decimal"
                   step="0.0001"
                   min="0.0001"
                   value={tasa}
-                  onChange={(e) => setTasa(e.target.value)}
+                  onChange={(e) => {
+                    setTasa(e.target.value)
+                    if (erroresCampos.tasa) {
+                      setErroresCampos((prev) => ({ ...prev, tasa: '' }))
+                    }
+                  }}
                   placeholder="Ej. 36.50"
                   required
                 />
+                {erroresCampos.tasa && (
+                  <span className="campo-error-msg">{erroresCampos.tasa}</span>
+                )}
               </label>
 
               <label className="campo">
-                <span>Concepto</span>
+                <span>Concepto *</span>
                 <input
+                  list="conceptos-sugeridos"
+                  className={erroresCampos.concepto ? 'campo-error' : ''}
                   value={concepto}
-                  onChange={(e) => setConcepto(e.target.value)}
-                  placeholder="Descripción breve"
+                  onChange={(e) => {
+                    setConcepto(e.target.value)
+                    if (erroresCampos.concepto) {
+                      setErroresCampos((prev) => ({ ...prev, concepto: '' }))
+                    }
+                  }}
+                  placeholder="Selecciona o escribe un nuevo concepto"
                   required
                 />
+                <datalist id="conceptos-sugeridos">
+                  {conceptosDisponibles.map((c) => (
+                    <option key={c} value={c} />
+                  ))}
+                </datalist>
+                {erroresCampos.concepto && (
+                  <span className="campo-error-msg">{erroresCampos.concepto}</span>
+                )}
               </label>
 
               <label className="campo">
-                <span>Nº de factura</span>
+                <span>Nº de factura *</span>
                 <input
+                  className={erroresCampos.factura ? 'campo-error' : ''}
                   value={factura}
-                  onChange={(e) => setFactura(e.target.value)}
-                  placeholder="Opcional"
+                  onChange={(e) => {
+                    setFactura(e.target.value)
+                    if (erroresCampos.factura) {
+                      setErroresCampos((prev) => ({ ...prev, factura: '' }))
+                    }
+                  }}
+                  placeholder="Número de factura"
+                  required
                 />
+                {erroresCampos.factura && (
+                  <span className="campo-error-msg">{erroresCampos.factura}</span>
+                )}
               </label>
             </div>
 
@@ -357,7 +437,7 @@ export default function RegistroTab() {
 
             {error && <div className="alerta error">{error}</div>}
 
-            <div className="form-acciones">
+            <div className="form-acciones-sticky">
               <button
                 type="button"
                 className="btn-secundario"
@@ -382,6 +462,23 @@ export default function RegistroTab() {
           <h3>Movimientos</h3>
           <p>Historial de gastos e ingresos registrados.</p>
         </div>
+        <div className="busqueda-contenedor">
+          <input
+            type="text"
+            className="busqueda-input"
+            placeholder="Buscar por concepto, factura, departamento, tipo..."
+            value={busqueda}
+            onChange={(e) => {
+              setBusqueda(e.target.value)
+              setPaginaActual(1)
+            }}
+          />
+          {busqueda && (
+            <span className="busqueda-resultado">
+              {movimientosFiltrados.length} resultado{movimientosFiltrados.length !== 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
         <button type="button" className="btn-primario" onClick={abrirNuevo}>
           + Registrar movimiento
         </button>
@@ -389,24 +486,6 @@ export default function RegistroTab() {
 
       {aviso && <div className="alerta exito">{aviso}</div>}
       {error && <div className="alerta error">{error}</div>}
-
-      <div className="busqueda-contenedor">
-        <input
-          type="text"
-          className="busqueda-input"
-          placeholder="Buscar por concepto, factura, departamento, tipo..."
-          value={busqueda}
-          onChange={(e) => {
-            setBusqueda(e.target.value)
-            setPaginaActual(1)
-          }}
-        />
-        {busqueda && (
-          <span className="busqueda-resultado">
-            {movimientosFiltrados.length} resultado{movimientosFiltrados.length !== 1 ? 's' : ''}
-          </span>
-        )}
-      </div>
 
       <div className="tabla-contenedor">
         {cargando ? (

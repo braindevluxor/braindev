@@ -312,6 +312,25 @@ p {
   border-color: var(--gris-300);
 }
 
+.campo input.campo-error,
+.campo select.campo-error {
+  border-color: #dc2626;
+  background-color: #fef2f2;
+}
+
+.campo input.campo-error:focus,
+.campo select.campo-error:focus {
+  border-color: #dc2626;
+  outline-color: #dc2626;
+}
+
+.campo-error-msg {
+  color: #dc2626;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-top: 0.25rem;
+}
+
 /* Campo con icono (login) */
 .campo-icono {
   position: relative;
@@ -1394,6 +1413,10 @@ p {
   border-top: 1px solid var(--gris-100);
 }
 
+.form-tarjeta.registro-gasto form {
+  padding-bottom: 4rem;
+}
+
 @media (max-width: 640px) {
   .form-tarjeta.registro-gasto .form-grid {
     grid-template-columns: 1fr;
@@ -1588,6 +1611,11 @@ p {
   font-size: 0.85rem;
 }
 
+.tarjeta-herramienta .busqueda-contenedor {
+  flex: 1;
+  max-width: 400px;
+}
+
 /* ---------- Modal ancho ---------- */
 .modal.modal-ancho {
   max-width: 40rem;
@@ -1625,6 +1653,20 @@ p {
   justify-content: flex-end;
   gap: 0.75rem;
   margin-top: 1.25rem;
+}
+
+.form-acciones-sticky {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  padding: 1rem 0;
+  margin-top: 1.25rem;
+  border-top: 1px solid var(--borde);
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+  z-index: 10;
 }
 
 .btn-sm {

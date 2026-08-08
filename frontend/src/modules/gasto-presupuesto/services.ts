@@ -263,4 +263,25 @@ export const gpService = {
     if (error) return { data: null, error: { message: error.message } }
     return { data: null, error: null }
   },
+
+  async obtenerConceptosDepartamento(departamentoId: string): Promise<RespuestaBackend<string[]>> {
+    const { data, error } = await supabase
+      .from('conceptos_departamento')
+      .select('concepto')
+      .eq('departamento_id', departamentoId)
+      .order('concepto')
+    if (error) return { data: null, error: { message: error.message } }
+    return { data: (data ?? []).map((r) => r.concepto), error: null }
+  },
+
+  async agregarConceptoDepartamento(departamentoId: string, concepto: string): Promise<RespuestaBackend<null>> {
+    const { error } = await supabase
+      .from('conceptos_departamento')
+      .insert({ departamento_id: departamentoId, concepto: concepto.trim() })
+    if (error) {
+      if (error.code === '23505') return { data: null, error: null }
+      return { data: null, error: { message: error.message } }
+    }
+    return { data: null, error: null }
+  },
 }
