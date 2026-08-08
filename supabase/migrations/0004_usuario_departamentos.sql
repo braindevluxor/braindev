@@ -24,10 +24,12 @@ comment on table public.usuario_departamentos is
 -- ---------------------------------------------------------------------------
 alter table public.usuario_departamentos enable row level security;
 
+drop policy if exists "Lectura de asignaciones" on public.usuario_departamentos;
 create policy "Lectura de asignaciones"
   on public.usuario_departamentos for select
   using (auth.role() = 'authenticated');
 
+drop policy if exists "Admins gestionan asignaciones" on public.usuario_departamentos;
 create policy "Admins gestionan asignaciones"
   on public.usuario_departamentos for all
   using (public.is_admin())

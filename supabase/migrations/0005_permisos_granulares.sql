@@ -88,19 +88,23 @@ alter table public.herramientas enable row level security;
 alter table public.permisos_usuario enable row level security;
 
 -- Lectura de módulos y herramientas para usuarios autenticados
+drop policy if exists "Lectura de módulos" on public.modulos;
 create policy "Lectura de módulos"
   on public.modulos for select
   using (auth.role() = 'authenticated');
 
+drop policy if exists "Lectura de herramientas" on public.herramientas;
 create policy "Lectura de herramientas"
   on public.herramientas for select
   using (auth.role() = 'authenticated');
 
 -- Solo admins pueden gestionar permisos
+drop policy if exists "Lectura de permisos propios" on public.permisos_usuario;
 create policy "Lectura de permisos propios"
   on public.permisos_usuario for select
   using (auth.uid() = usuario_id or public.is_admin());
 
+drop policy if exists "Admins gestionan permisos" on public.permisos_usuario;
 create policy "Admins gestionan permisos"
   on public.permisos_usuario for all
   using (public.is_admin())

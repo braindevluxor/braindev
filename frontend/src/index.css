@@ -2452,6 +2452,20 @@ p {
   color: var(--gris-500);
 }
 
+.permisos-deptos-section {
+  padding: 1rem 1.5rem;
+  background: var(--gris-50);
+  border-bottom: 1px solid var(--borde);
+}
+
+.permisos-deptos-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gris-700);
+}
+
 .permisos-herramientas {
   padding: 0;
 }

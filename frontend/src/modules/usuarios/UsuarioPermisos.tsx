@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom'
 import { permisosService } from '../../services/permisos'
 import { usuariosService } from './services'
-import type { Perfil, Modulo, Herramienta } from '../../types'
+import { gpService } from '../gasto-presupuesto/services'
+import type { Perfil, Modulo, Herramienta, Departamento } from '../../types'
 import Cargando from '../../components/Cargando'
+import MultiSelect from '../../components/MultiSelect'
 
 interface OutletContextType {
   recargarUsuarios: boolean
@@ -32,6 +34,9 @@ export default function UsuarioPermisos() {
   const [cargando, setCargando] = useState(true)
   const [guardando, setGuardando] = useState<string | null>(null)
 
+  const [departamentos, setDepartamentos] = useState<Departamento[]>([])
+  const [deptosAsignados, setDeptosAsignados] = useState<string[]>([])
+
   useEffect(() => {
     if (id) {
       void cargarDatos(id)
@@ -40,11 +45,13 @@ export default function UsuarioPermisos() {
 
   async function cargarDatos(userId: string) {
     setCargando(true)
-    const [resUsuario, resModulos, resHerramientas, resPermisos] = await Promise.all([
+    const [resUsuario, resModulos, resHerramientas, resPermisos, resDeptos, resAsignados] = await Promise.all([
       usuariosService.obtener(userId),
       permisosService.listarModulos(),
       permisosService.listarHerramientas(),
       permisosService.obtenerPermisosUsuario(userId),
+      gpService.listarDepartamentos(),
+      gpService.listarDepartamentosUsuario(userId),
     ])
 
     if (!resUsuario.error && resUsuario.data) {
@@ -70,7 +77,35 @@ export default function UsuarioPermisos() {
       }
       setPermisos(locales)
     }
+    if (!resDeptos.error && resDeptos.data) {
+      setDepartamentos(resDeptos.data)
+    }
+    if (!resAsignados.error && resAsignados.data) {
+      setDeptosAsignados(resAsignados.data.map((d) => d.id))
+    }
     setCargando(false)
+  }
+
+  async function handleDeptosChange(nuevosIds: string[]) {
+    if (!id) return
+
+    const actuales = new Set(deptosAsignados)
+    const nuevos = new Set(nuevosIds)
+
+    for (const deptoId of nuevos) {
+      if (!actuales.has(deptoId)) {
+        await gpService.asignarDepartamento(id, deptoId)
+      }
+    }
+
+    for (const deptoId of actuales) {
+      if (!nuevos.has(deptoId)) {
+        await gpService.desasignarDepartamento(id, deptoId)
+      }
+    }
+
+    setDeptosAsignados(nuevosIds)
+    triggerRecarga()
   }
 
   async function togglePermiso(
@@ -236,6 +271,21 @@ export default function UsuarioPermisos() {
                 </label>
                 <span className="permisos-modulo-desc">{modulo.descripcion}</span>
               </div>
+
+              {modulo.id === 'gasto-presupuesto' && (
+                <div className="permisos-deptos-section">
+                  <label className="permisos-deptos-label">
+                    <span>Unidades presupuestarias que puede gestionar:</span>
+                  </label>
+                  <MultiSelect
+                    options={departamentos.map((d) => ({ value: d.id, label: d.nombre }))}
+                    selected={deptosAsignados}
+                    onChange={handleDeptosChange}
+                    placeholder="Seleccionar unidades..."
+                    searchPlaceholder="Buscar unidad..."
+                  />
+                </div>
+              )}
 
               <div className="permisos-herramientas">
                 <div className="permisos-herramienta-header">
