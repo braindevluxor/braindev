@@ -231,4 +231,36 @@ export const gpService = {
       monto_usd: presupuesto.monto_usd,
     })
   },
+
+  async listarDepartamentosUsuario(usuarioId: string): Promise<RespuestaBackend<Departamento[]>> {
+    const { data, error } = await supabase
+      .from('usuario_departamentos')
+      .select('departamento_id, departamentos(*)')
+      .eq('usuario_id', usuarioId)
+    if (error) return { data: null, error: { message: error.message } }
+    const departamentos = ((data ?? []) as Array<{ departamento_id: string; departamentos: Departamento }>)
+      .map((r) => r.departamentos)
+    return { data: departamentos, error: null }
+  },
+
+  async asignarDepartamento(usuarioId: string, departamentoId: string): Promise<RespuestaBackend<null>> {
+    const { error } = await supabase
+      .from('usuario_departamentos')
+      .insert({ usuario_id: usuarioId, departamento_id: departamentoId })
+    if (error) {
+      if (error.code === '23505') return { data: null, error: { message: 'Ya está asignado' } }
+      return { data: null, error: { message: error.message } }
+    }
+    return { data: null, error: null }
+  },
+
+  async desasignarDepartamento(usuarioId: string, departamentoId: string): Promise<RespuestaBackend<null>> {
+    const { error } = await supabase
+      .from('usuario_departamentos')
+      .delete()
+      .eq('usuario_id', usuarioId)
+      .eq('departamento_id', departamentoId)
+    if (error) return { data: null, error: { message: error.message } }
+    return { data: null, error: null }
+  },
 }

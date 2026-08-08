@@ -1,4 +1,5 @@
 import { IconoPresupuestos, IconoRegistro, IconoReportes } from '../components/pestanaIconos'
+import { FiUsers, FiUserPlus } from 'react-icons/fi'
 import type { ModuloConfig } from '../types'
 
 /**
@@ -17,10 +18,13 @@ export const MODULOS: ModuloConfig[] = [
   {
     id: 'usuarios',
     nombre: 'Usuarios',
-    descripcion: 'Gestión de cuentas, roles y estado de los usuarios del sistema.',
+    descripcion: 'Gestión de cuentas, roles y permisos de los usuarios del sistema.',
     ruta: '/usuarios',
     habilitado: true,
-    pestanas: [],
+    pestanas: [
+      { id: 'lista', etiqueta: 'Usuarios', ruta: '/usuarios', icono: FiUsers },
+      { id: 'crear', etiqueta: 'Crear', ruta: '/usuarios/crear', icono: FiUserPlus },
+    ],
     color: {
       principal: '#2563EB',
       oscuro: '#1E40AF',

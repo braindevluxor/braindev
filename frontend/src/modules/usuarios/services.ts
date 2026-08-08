@@ -34,6 +34,17 @@ export const usuariosService = {
     return { data: data as Perfil[], error: null }
   },
 
+  async obtener(userId: string): Promise<RespuestaBackend<Perfil>> {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single()
+
+    if (error) return { data: null, error: { message: error.message } }
+    return { data: data as Perfil, error: null }
+  },
+
   async crear(datos: DatosCrearUsuario): Promise<RespuestaBackend<null>> {
     const { error } = await supabase.rpc('crear_usuario', {
       p_email: datos.email,
@@ -54,6 +65,16 @@ export const usuariosService = {
       p_full_name: datos.full_name ?? null,
       p_role: datos.role ?? null,
       p_is_active: datos.is_active ?? null,
+    })
+
+    if (error) return { data: null, error: { message: error.message } }
+    return { data: null, error: null }
+  },
+
+  async cambiarPassword(userId: string, newPassword: string): Promise<RespuestaBackend<null>> {
+    const { error } = await supabase.rpc('cambiar_password_usuario', {
+      p_user_id: userId,
+      p_new_password: newPassword,
     })
 
     if (error) return { data: null, error: { message: error.message } }

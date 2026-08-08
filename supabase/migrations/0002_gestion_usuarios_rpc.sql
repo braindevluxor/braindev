@@ -182,3 +182,38 @@ grant execute on function public.actualizar_usuario(uuid, text, text, boolean) t
 
 revoke execute on function public.eliminar_usuario(uuid) from public, anon;
 grant execute on function public.eliminar_usuario(uuid) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 5. Cambiar contraseña de un usuario.
+-- ---------------------------------------------------------------------------
+create or replace function public.cambiar_password_usuario(
+  p_user_id uuid,
+  p_new_password text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+begin
+  if not public.is_admin() then
+    raise exception 'Requiere rol de administrador';
+  end if;
+
+  if p_new_password is null or length(p_new_password) < 8 then
+    raise exception 'La contraseña debe tener al menos 8 caracteres';
+  end if;
+
+  update auth.users
+  set encrypted_password = crypt(p_new_password, gen_salt('bf', 10)),
+      updated_at = now()
+  where id = p_user_id;
+
+  if not found then
+    raise exception 'Usuario no encontrado';
+  end if;
+end;
+$$;
+
+revoke execute on function public.cambiar_password_usuario(uuid, text) from public, anon;
+grant execute on function public.cambiar_password_usuario(uuid, text) to authenticated;

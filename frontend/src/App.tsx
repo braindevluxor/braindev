@@ -1,8 +1,12 @@
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth } from './contexts/AuthContext'
+import { PermisosProvider } from './contexts/PermisosContext'
 import Login from './components/Login'
 import NavBar from './components/NavBar'
 import UsuariosPage from './modules/usuarios/UsuariosPage'
+import UsuariosLista from './modules/usuarios/UsuariosLista'
+import UsuarioForm from './modules/usuarios/UsuarioForm'
+import UsuarioPermisos from './modules/usuarios/UsuarioPermisos'
 import GastoPresupuestoPage, {
   RegistroTab,
   PresupuestosTab,
@@ -55,20 +59,27 @@ function AppShell() {
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/" element={<AppShell />}>
-        <Route index element={<Navigate to="/usuarios" replace />} />
-        <Route path="usuarios" element={<UsuariosPage />} />
-        <Route path="gasto-presupuesto" element={<GastoPresupuestoPage />}>
-          <Route index element={<Navigate to="registro" replace />} />
-          <Route path="registro" element={<RegistroTab />} />
-          <Route path="presupuestos" element={<PresupuestosTab />} />
-          <Route path="reportes" element={<ReportesTab />} />
+    <PermisosProvider>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/" element={<AppShell />}>
+          <Route index element={<Navigate to="/usuarios" replace />} />
+          <Route path="usuarios" element={<UsuariosPage />}>
+            <Route index element={<UsuariosLista />} />
+            <Route path="crear" element={<UsuarioForm />} />
+            <Route path="editar/:id" element={<UsuarioForm />} />
+            <Route path="permisos/:id" element={<UsuarioPermisos />} />
+          </Route>
+          <Route path="gasto-presupuesto" element={<GastoPresupuestoPage />}>
+            <Route index element={<Navigate to="registro" replace />} />
+            <Route path="registro" element={<RegistroTab />} />
+            <Route path="presupuestos" element={<PresupuestosTab />} />
+            <Route path="reportes" element={<ReportesTab />} />
+          </Route>
         </Route>
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </PermisosProvider>
   )
 }
 

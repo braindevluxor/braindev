@@ -1,133 +1,189 @@
-import { useEffect, useState, type FormEvent } from 'react'
-import type { Perfil, Rol } from '../../types'
-import {
-  usuariosService,
-  type DatosCrearUsuario,
-  type DatosActualizarUsuario,
-} from './services'
+import { useState, useEffect } from 'react'
+import { useNavigate, useParams, useOutletContext } from 'react-router-dom'
+import { usuariosService } from './services'
+import Cargando from '../../components/Cargando'
 
-type Modo = 'crear' | 'editar'
-
-interface Props {
-  modo: Modo
-  perfil?: Perfil | null
-  onCancelar: () => void
-  onGuardado: (mensaje: string) => void
+interface OutletContextType {
+  recargarUsuarios: boolean
+  triggerRecarga: () => void
 }
 
-const ROLES: { valor: Rol; etiqueta: string }[] = [
-  { valor: 'usuario', etiqueta: 'Usuario' },
-  { valor: 'admin', etiqueta: 'Administrador' },
-]
+export default function UsuarioForm() {
+  const navigate = useNavigate()
+  const { id } = useParams<{ id: string }>()
+  const { triggerRecarga } = useOutletContext<OutletContextType>()
+  const esEdicion = !!id
 
-export default function UsuarioForm({ modo, perfil, onCancelar, onGuardado }: Props) {
-  const [email, setEmail] = useState(perfil?.email ?? '')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [fullName, setFullName] = useState(perfil?.full_name ?? '')
-  const [role, setRole] = useState<Rol>(perfil?.role ?? 'usuario')
+  const [fullName, setFullName] = useState('')
+  const [role, setRole] = useState<'admin' | 'usuario'>('usuario')
+  const [cargando, setCargando] = useState(false)
+  const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [enviando, setEnviando] = useState(false)
-
-  const esCrear = modo === 'crear'
+  const [exito, setExito] = useState<string | null>(null)
 
   useEffect(() => {
-    function onTecla(e: KeyboardEvent) {
-      if (e.key === 'Escape') onCancelar()
+    if (id) {
+      cargarUsuario(id)
     }
-    document.addEventListener('keydown', onTecla)
-    return () => document.removeEventListener('keydown', onTecla)
-  }, [onCancelar])
+  }, [id])
 
-  async function onSubmit(e: FormEvent) {
-    e.preventDefault()
-    setError(null)
-    setEnviando(true)
-
-    const datos: DatosCrearUsuario | DatosActualizarUsuario = esCrear
-      ? { email: email.trim(), password, full_name: fullName.trim(), role }
-      : {
-          user_id: perfil!.id,
-          full_name: fullName.trim() || undefined,
-          role,
-        }
-
-    const res = esCrear
-      ? await usuariosService.crear(datos as DatosCrearUsuario)
-      : await usuariosService.actualizar(datos as DatosActualizarUsuario)
-
+  async function cargarUsuario(userId: string) {
+    setCargando(true)
+    const res = await usuariosService.obtener(userId)
     if (res.error) {
       setError(res.error.message)
-      setEnviando(false)
-      return
+    } else if (res.data) {
+      setEmail(res.data.email)
+      setFullName(res.data.full_name)
+      setRole(res.data.role)
     }
-    setEnviando(false)
-    onGuardado(esCrear ? 'Usuario creado correctamente' : 'Usuario actualizado correctamente')
+    setCargando(false)
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setGuardando(true)
+    setError(null)
+    setExito(null)
+
+    if (esEdicion && id) {
+      const res = await usuariosService.actualizar({
+        user_id: id,
+        email,
+        full_name: fullName,
+        role,
+      })
+      if (res.error) {
+        setError(res.error.message)
+        setGuardando(false)
+        return
+      }
+
+      if (password) {
+        const resPass = await usuariosService.cambiarPassword(id, password)
+        if (resPass.error) {
+          setError(resPass.error.message)
+          setGuardando(false)
+          return
+        }
+      }
+    } else {
+      if (!password) {
+        setError('La contraseña es obligatoria para crear un usuario')
+        setGuardando(false)
+        return
+      }
+      const res = await usuariosService.crear({
+        email,
+        password,
+        full_name: fullName,
+        role,
+      })
+      if (res.error) {
+        setError(res.error.message)
+        setGuardando(false)
+        return
+      }
+    }
+
+    triggerRecarga()
+    setExito(esEdicion ? 'Usuario actualizado correctamente' : 'Usuario creado correctamente')
+    setPassword('')
+    setGuardando(false)
+  }
+
+  if (cargando) {
+    return (
+      <div className="pestana-contenido">
+        <div className="form-tarjeta">
+          <Cargando mensaje="Cargando usuario…" />
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="modal-fondo" onClick={onCancelar}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h3>{esCrear ? 'Nuevo usuario' : 'Editar usuario'}</h3>
+    <div className="pestana-contenido">
+      <div className="form-tarjeta">
+        <div className="form-tarjeta-titulo">
+          <div>
+            <h3>{esEdicion ? 'Editar Usuario' : 'Crear Nuevo Usuario'}</h3>
+            <p>{esEdicion ? 'Modifica los datos del usuario' : 'Completa los datos para crear un nuevo usuario'}</p>
+          </div>
+          <button
+            type="button"
+            className="btn-secundario"
+            onClick={() => navigate('/usuarios')}
+          >
+            ← Volver
+          </button>
+        </div>
 
-        <form onSubmit={onSubmit} className="login-form" noValidate>
+        {error && <div className="alerta error">{error}</div>}
+        {exito && <div className="alerta exito">{exito}</div>}
+
+        <form onSubmit={handleSubmit} className="form-grid">
           <label className="campo">
             <span>Nombre completo</span>
             <input
+              type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              placeholder="Nombre y apellidos"
+              placeholder="Ej: Juan Pérez"
               required
             />
           </label>
 
-          {esCrear && (
-            <>
-              <label className="campo">
-                <span>Correo electrónico</span>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="usuario@empresa.com"
-                  autoComplete="off"
-                  required
-                />
-              </label>
+          <label className="campo">
+            <span>Email</span>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="usuario@empresa.com"
+              required
+            />
+          </label>
 
-              <label className="campo">
-                <span>Contraseña</span>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Mínimo 8 caracteres"
-                  autoComplete="new-password"
-                  minLength={8}
-                  required
-                />
-              </label>
-            </>
-          )}
+          <label className="campo">
+            <span>{esEdicion ? 'Nueva contraseña (dejar vacío para no cambiar)' : 'Contraseña'}</span>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder={esEdicion ? 'Dejar vacío para mantener la actual' : 'Mínimo 6 caracteres'}
+              minLength={6}
+              required={!esEdicion}
+            />
+          </label>
 
           <label className="campo">
             <span>Rol</span>
-            <select value={role} onChange={(e) => setRole(e.target.value as Rol)}>
-              {ROLES.map((r) => (
-                <option key={r.valor} value={r.valor}>
-                  {r.etiqueta}
-                </option>
-              ))}
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value as 'admin' | 'usuario')}
+            >
+              <option value="usuario">Usuario</option>
+              <option value="admin">Administrador</option>
             </select>
           </label>
 
-          {error && <div className="alerta error">{error}</div>}
-
-          <div className="modal-acciones">
-            <button type="button" className="btn-secundario" onClick={onCancelar}>
+          <div className="form-acciones">
+            <button
+              type="button"
+              className="btn-secundario"
+              onClick={() => navigate('/usuarios')}
+            >
               Cancelar
             </button>
-            <button type="submit" className="btn-primario" disabled={enviando}>
-              {enviando ? 'Guardando…' : 'Guardar'}
+            <button
+              type="submit"
+              className="btn-primario"
+              disabled={guardando}
+            >
+              {guardando ? 'Guardando...' : esEdicion ? 'Actualizar' : 'Crear Usuario'}
             </button>
           </div>
         </form>

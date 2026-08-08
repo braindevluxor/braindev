@@ -88,3 +88,47 @@ export interface FilaReporte {
   diferencia: number
   porcentaje: number | null
 }
+
+// Sistema de permisos granulares
+export interface Modulo {
+  id: string
+  nombre: string
+  descripcion: string
+  ruta: string
+  habilitado: boolean
+  created_at: string
+}
+
+export interface Herramienta {
+  id: string
+  modulo_id: string
+  nombre: string
+  ruta: string
+  orden: number
+  created_at: string
+}
+
+export interface PermisosUsuario {
+  id: string
+  usuario_id: string
+  modulo_id: string
+  herramienta_id: string
+  puede_crear: boolean
+  puede_leer: boolean
+  puede_actualizar: boolean
+  puede_eliminar: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface PermisosPorHerramienta {
+  herramienta_id: string
+  puede_crear: boolean
+  puede_leer: boolean
+  puede_actualizar: boolean
+  puede_eliminar: boolean
+}
+
+export interface PermisosUsuarioMap {
+  [herramienta_id: string]: PermisosPorHerramienta
+}
