@@ -75,6 +75,15 @@ function generarCurvaSuave(puntos: { x: number; y: number }[]): string {
 }
 
 function GraficoCurvas({ filas }: { filas: FilaReporte[] }) {
+  const [tooltip, setTooltip] = useState<{
+    visible: boolean
+    x: number
+    y: number
+    departamento: string
+    valor: number
+    tipo: 'gasto' | 'presupuesto'
+  } | null>(null)
+  
   const ancho = 800
   const alto = 400
   const margen = { top: 30, right: 30, bottom: 80, left: 80 }
@@ -112,100 +121,166 @@ function GraficoCurvas({ filas }: { filas: FilaReporte[] }) {
 
   const lineasY = [0, 0.25, 0.5, 0.75, 1]
 
+  function mostrarTooltip(e: React.MouseEvent, departamento: string, valor: number, tipo: 'gasto' | 'presupuesto', x: number, y: number) {
+    const svg = (e.target as SVGElement).closest('svg')
+    if (!svg) return
+    
+    const rect = svg.getBoundingClientRect()
+    const svgWidth = rect.width
+    const svgHeight = rect.height
+    
+    // Convertir coordenadas SVG a coordenadas de pantalla
+    const scaleX = svgWidth / ancho
+    const scaleY = svgHeight / alto
+    
+    setTooltip({
+      visible: true,
+      x: x * scaleX,
+      y: y * scaleY,
+      departamento,
+      valor,
+      tipo,
+    })
+  }
+
+  function ocultarTooltip() {
+    setTooltip(null)
+  }
+
   return (
     <div className="grafico-contenedor">
-      <svg viewBox={`0 0 ${ancho} ${alto}`} className="grafico-svg" preserveAspectRatio="xMidYMid meet">
-        <rect x={margen.left} y={margen.top} width={anchoGrafico} height={altoGrafico} fill="#f8fafc" />
+      <div className="grafico-wrapper">
+        <svg viewBox={`0 0 ${ancho} ${alto}`} className="grafico-svg" preserveAspectRatio="xMidYMid meet">
+          <rect x={margen.left} y={margen.top} width={anchoGrafico} height={altoGrafico} fill="#f8fafc" />
 
-        {lineasY.map((pct, i) => {
-          const y = margen.top + altoGrafico - pct * altoGrafico
-          return (
-            <g key={i}>
-              <line
-                x1={margen.left}
-                y1={y}
-                x2={ancho - margen.right}
-                y2={y}
-                stroke="#cbd5e1"
-                strokeWidth="1"
-                strokeDasharray="4,4"
-              />
+          {lineasY.map((pct, i) => {
+            const y = margen.top + altoGrafico - pct * altoGrafico
+            return (
+              <g key={i}>
+                <line
+                  x1={margen.left}
+                  y1={y}
+                  x2={ancho - margen.right}
+                  y2={y}
+                  stroke="#cbd5e1"
+                  strokeWidth="1"
+                  strokeDasharray="4,4"
+                />
+                <text
+                  x={margen.left - 10}
+                  y={y + 4}
+                  textAnchor="end"
+                  fontSize="12"
+                  fill="#64748b"
+                >
+                  {formatoUsd(maxValor * pct)}
+                </text>
+              </g>
+            )
+          })}
+
+          <line
+            x1={margen.left}
+            y1={margen.top + altoGrafico}
+            x2={ancho - margen.right}
+            y2={margen.top + altoGrafico}
+            stroke="#334155"
+            strokeWidth="2"
+          />
+          <line
+            x1={margen.left}
+            y1={margen.top}
+            x2={margen.left}
+            y2={margen.top + altoGrafico}
+            stroke="#334155"
+            strokeWidth="2"
+          />
+
+          {curvaPresupuesto && (
+            <path
+              d={curvaPresupuesto}
+              fill="none"
+              stroke="#10b981"
+              strokeWidth="3"
+              strokeDasharray="8,4"
+            />
+          )}
+
+          {curvaGasto && (
+            <path
+              d={curvaGasto}
+              fill="none"
+              stroke="#ef4444"
+              strokeWidth="3"
+            />
+          )}
+
+          {puntosPresupuesto.map((p, i) => (
+            <circle
+              key={`pres-${i}`}
+              cx={p.x}
+              cy={p.y}
+              r="6"
+              fill="#10b981"
+              stroke="#fff"
+              strokeWidth="2"
+              className="grafico-punto"
+              onMouseEnter={(e) => mostrarTooltip(e, p.departamento, p.valor, 'presupuesto', p.x, p.y)}
+              onMouseLeave={ocultarTooltip}
+            />
+          ))}
+
+          {puntosGasto.map((p, i) => (
+            <circle
+              key={`gas-${i}`}
+              cx={p.x}
+              cy={p.y}
+              r="6"
+              fill="#ef4444"
+              stroke="#fff"
+              strokeWidth="2"
+              className="grafico-punto"
+              onMouseEnter={(e) => mostrarTooltip(e, p.departamento, p.valor, 'gasto', p.x, p.y)}
+              onMouseLeave={ocultarTooltip}
+            />
+          ))}
+
+          {filasConDatos.map((f, i) => {
+            const x = margen.left + (filasConDatos.length > 1 ? i * pasoX : anchoGrafico / 2)
+            return (
               <text
-                x={margen.left - 10}
-                y={y + 4}
-                textAnchor="end"
-                fontSize="12"
-                fill="#64748b"
+                key={f.departamento.id}
+                x={x}
+                y={margen.top + altoGrafico + 25}
+                textAnchor="middle"
+                fontSize="11"
+                fill="#334155"
+                fontWeight="600"
               >
-                {formatoUsd(maxValor * pct)}
+                {f.departamento.nombre.length > 15
+                  ? f.departamento.nombre.slice(0, 15) + '...'
+                  : f.departamento.nombre}
               </text>
-            </g>
-          )
-        })}
+            )
+          })}
+        </svg>
 
-        <line
-          x1={margen.left}
-          y1={margen.top + altoGrafico}
-          x2={ancho - margen.right}
-          y2={margen.top + altoGrafico}
-          stroke="#334155"
-          strokeWidth="2"
-        />
-        <line
-          x1={margen.left}
-          y1={margen.top}
-          x2={margen.left}
-          y2={margen.top + altoGrafico}
-          stroke="#334155"
-          strokeWidth="2"
-        />
-
-        {curvaPresupuesto && (
-          <path
-            d={curvaPresupuesto}
-            fill="none"
-            stroke="#10b981"
-            strokeWidth="3"
-            strokeDasharray="8,4"
-          />
+        {tooltip && tooltip.visible && (
+          <div
+            className="grafico-tooltip"
+            style={{
+              left: `${tooltip.x}px`,
+              top: `${tooltip.y - 10}px`,
+            }}
+          >
+            <div className="tooltip-departamento">{tooltip.departamento}</div>
+            <div className="tooltip-valor">
+              {tooltip.tipo === 'gasto' ? 'Gasto: ' : 'Presupuesto: '}
+              {formatoUsd(tooltip.valor)}
+            </div>
+          </div>
         )}
-
-        {curvaGasto && (
-          <path
-            d={curvaGasto}
-            fill="none"
-            stroke="#ef4444"
-            strokeWidth="3"
-          />
-        )}
-
-        {puntosPresupuesto.map((p, i) => (
-          <circle key={`pres-${i}`} cx={p.x} cy={p.y} r="6" fill="#10b981" stroke="#fff" strokeWidth="2" />
-        ))}
-
-        {puntosGasto.map((p, i) => (
-          <circle key={`gas-${i}`} cx={p.x} cy={p.y} r="6" fill="#ef4444" stroke="#fff" strokeWidth="2" />
-        ))}
-
-        {filasConDatos.map((f, i) => {
-          const x = margen.left + (filasConDatos.length > 1 ? i * pasoX : anchoGrafico / 2)
-          return (
-            <text
-              key={f.departamento.id}
-              x={x}
-              y={margen.top + altoGrafico + 25}
-              textAnchor="middle"
-              fontSize="11"
-              fill="#334155"
-              fontWeight="600"
-            >
-              {f.departamento.nombre.length > 15
-                ? f.departamento.nombre.slice(0, 15) + '...'
-                : f.departamento.nombre}
-            </text>
-          )
-        })}
-      </svg>
+      </div>
 
       <div className="grafico-leyenda">
         <span className="leyenda-item">
