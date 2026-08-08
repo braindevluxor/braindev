@@ -11,13 +11,18 @@ function anioMesValor(): string {
   return `${anio}-${String(mes).padStart(2, '0')}`
 }
 
+type VistaPresupuestos = 'mes' | 'anio'
+
 export default function PresupuestosTab() {
   const { perfil } = useAuth()
   const { departamentos, recargarDepartamentos } = useContextoGastoPresupuesto()
   const esAdmin = perfil?.role === 'admin'
 
   const [periodo, setPeriodo] = useState(anioMesValor())
+  const [vista, setVista] = useState<VistaPresupuestos>('mes')
+  const [anioSeleccionado, setAnioSeleccionado] = useState(anioMesActual().anio)
   const [presupuestos, setPresupuestos] = useState<Presupuesto[]>([])
+  const [presupuestosAnio, setPresupuestosAnio] = useState<Presupuesto[]>([])
   const [montos, setMontos] = useState<Record<string, string>>({})
   const [nuevoDepto, setNuevoDepto] = useState('')
   const [modalDeptoAbierto, setModalDeptoAbierto] = useState(false)
@@ -39,9 +44,22 @@ export default function PresupuestosTab() {
     setCargando(false)
   }, [anio, mes])
 
+  const cargarAnio = useCallback(async () => {
+    const res = await gpService.listarPresupuestosAnio(anioSeleccionado)
+    if (!res.error) {
+      setPresupuestosAnio(res.data ?? [])
+    }
+  }, [anioSeleccionado])
+
   useEffect(() => {
     void cargar()
   }, [cargar])
+
+  useEffect(() => {
+    if (vista === 'anio') {
+      void cargarAnio()
+    }
+  }, [vista, cargarAnio])
 
   useEffect(() => {
     // Cuando llegan los presupuestos del mes, precargar los montos en los inputs.
@@ -124,80 +142,237 @@ export default function PresupuestosTab() {
     recargarDepartamentos()
   }
 
+  async function copiarDesdeMesAnterior() {
+    let mesAnterior = mes - 1
+    let anioAnterior = anio
+    if (mesAnterior < 1) {
+      mesAnterior = 12
+      anioAnterior = anio - 1
+    }
+    setError(null)
+    let copiados = 0
+    for (const d of departamentos) {
+      const res = await gpService.copiarPresupuesto(d.id, anioAnterior, mesAnterior, anio, mes)
+      if (!res.error) copiados++
+    }
+    if (copiados > 0) {
+      mostrarAviso(`Presupuestos copiados desde ${nombreMes(anioAnterior, mesAnterior)}`)
+      void cargar()
+    } else {
+      setError('No hay presupuestos para copiar del mes anterior')
+    }
+  }
+
+  async function copiarDesdeMesSiguiente() {
+    let mesSiguiente = mes + 1
+    let anioSiguiente = anio
+    if (mesSiguiente > 12) {
+      mesSiguiente = 1
+      anioSiguiente = anio + 1
+    }
+    setError(null)
+    let copiados = 0
+    for (const d of departamentos) {
+      const res = await gpService.copiarPresupuesto(d.id, anioSiguiente, mesSiguiente, anio, mes)
+      if (!res.error) copiados++
+    }
+    if (copiados > 0) {
+      mostrarAviso(`Presupuestos copiados desde ${nombreMes(anioSiguiente, mesSiguiente)}`)
+      void cargar()
+    } else {
+      setError('No hay presupuestos para copiar del mes siguiente')
+    }
+  }
+
+  async function copiarAMesSiguiente() {
+    let mesSiguiente = mes + 1
+    let anioSiguiente = anio
+    if (mesSiguiente > 12) {
+      mesSiguiente = 1
+      anioSiguiente = anio + 1
+    }
+    setError(null)
+    let copiados = 0
+    for (const d of departamentos) {
+      const presupuestoActual = presupuestos.find((p) => p.departamento_id === d.id)
+      if (presupuestoActual) {
+        const res = await gpService.guardarPresupuesto({
+          departamento_id: d.id,
+          anio: anioSiguiente,
+          mes: mesSiguiente,
+          monto_usd: presupuestoActual.monto_usd,
+        })
+        if (!res.error) copiados++
+      }
+    }
+    if (copiados > 0) {
+      mostrarAviso(`Presupuestos copiados a ${nombreMes(anioSiguiente, mesSiguiente)}`)
+    }
+  }
+
+  const resumenAnio = useMemo(() => {
+    const porMes: Record<number, number> = {}
+    for (let m = 1; m <= 12; m++) {
+      porMes[m] = presupuestosAnio.filter((p) => p.mes === m).reduce((s, p) => s + p.monto_usd, 0)
+    }
+    const totalAnio = Object.values(porMes).reduce((s, v) => s + v, 0)
+    return { porMes, totalAnio }
+  }, [presupuestosAnio])
+
   return (
     <div className="pestana-contenido">
       <div className="form-tarjeta">
         <div className="form-tarjeta-titulo">
           <h3>Presupuesto mensual por departamento</h3>
+          <div className="vista-toggle">
+            <button
+              type="button"
+              className={`vista-toggle-btn ${vista === 'mes' ? 'activo' : ''}`}
+              onClick={() => setVista('mes')}
+            >
+              Por mes
+            </button>
+            <button
+              type="button"
+              className={`vista-toggle-btn ${vista === 'anio' ? 'activo' : ''}`}
+              onClick={() => setVista('anio')}
+            >
+              Histórico anual
+            </button>
+          </div>
         </div>
 
-        <div className="form-grid">
-          <label className="campo">
-            <span>Periodo</span>
-            <input
-              type="month"
-              value={periodo}
-              onChange={(e) => setPeriodo(e.target.value)}
-            />
-          </label>
-        </div>
+        {vista === 'mes' ? (
+          <>
+            <div className="form-grid">
+              <label className="campo">
+                <span>Periodo</span>
+                <input
+                  type="month"
+                  value={periodo}
+                  onChange={(e) => setPeriodo(e.target.value)}
+                />
+              </label>
+            </div>
 
-        <p className="nota-ayuda">
-          Presupuesto para <strong>{nombreMes(anio, mes)}</strong>. Los valores se guardan en
-          USD (el sistema siempre refleja USD).
-        </p>
+            <p className="nota-ayuda">
+              Presupuesto para <strong>{nombreMes(anio, mes)}</strong>. Los valores se guardan en
+              USD (el sistema siempre refleja USD).
+            </p>
+
+            {esAdmin && (
+              <div className="presupuesto-acciones-rapidas">
+                <button
+                  type="button"
+                  className="btn-secundario btn-sm"
+                  onClick={() => void copiarDesdeMesAnterior()}
+                >
+                  ← Copiar desde mes anterior
+                </button>
+                <button
+                  type="button"
+                  className="btn-secundario btn-sm"
+                  onClick={() => void copiarDesdeMesSiguiente()}
+                >
+                  Copiar desde mes siguiente →
+                </button>
+                <button
+                  type="button"
+                  className="btn-secundario btn-sm"
+                  onClick={() => void copiarAMesSiguiente()}
+                >
+                  Copiar actual al mes siguiente →
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="form-grid">
+              <label className="campo">
+                <span>Año</span>
+                <input
+                  type="number"
+                  min="2000"
+                  max="2100"
+                  value={anioSeleccionado}
+                  onChange={(e) => setAnioSeleccionado(Number(e.target.value))}
+                />
+              </label>
+            </div>
+
+            <p className="nota-ayuda">
+              Resumen de presupuestos para el año <strong>{anioSeleccionado}</strong>.
+            </p>
+
+            <div className="resumen-anio-grid">
+              {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                <div key={m} className="resumen-anio-card">
+                  <span className="resumen-anio-mes">{nombreMes(anioSeleccionado, m)}</span>
+                  <strong className="resumen-anio-monto">{formatoUsd(resumenAnio.porMes[m])}</strong>
+                </div>
+              ))}
+              <div className="resumen-anio-card resumen-anio-total">
+                <span className="resumen-anio-mes">Total anual</span>
+                <strong className="resumen-anio-monto">{formatoUsd(resumenAnio.totalAnio)}</strong>
+              </div>
+            </div>
+          </>
+        )}
 
         {error && <div className="alerta error">{error}</div>}
         {aviso && <div className="alerta exito">{aviso}</div>}
 
-        <div className="tabla-contenedor">
-          {cargando ? (
-            <Cargando mensaje="Cargando presupuestos…" />
-          ) : (
-            <table className="tabla">
-              <thead>
-                <tr>
-                  <th>Departamento</th>
-                  <th>Presupuesto (USD)</th>
-                  {esAdmin && <th></th>}
-                </tr>
-              </thead>
-              <tbody>
-                {departamentos.map((d) => (
-                  <tr key={d.id}>
-                    <td>{d.nombre}</td>
-                    <td>
-                      <input
-                        className="input-tabla"
-                        type="number"
-                        inputMode="decimal"
-                        step="0.01"
-                        min="0"
-                        value={montos[d.id] ?? ''}
-                        onChange={(e) =>
-                          setMontos((prev) => ({ ...prev, [d.id]: e.target.value }))
-                        }
-                        disabled={!esAdmin}
-                        placeholder="0.00"
-                      />
-                    </td>
-                    {esAdmin && (
-                      <td className="acciones">
-                        <button
-                          type="button"
-                          className="btn-secundario btn-sm"
-                          onClick={() => void guardar(d.id)}
-                        >
-                          Guardar
-                        </button>
-                      </td>
-                    )}
+        {vista === 'mes' && (
+          <div className="tabla-contenedor">
+            {cargando ? (
+              <Cargando mensaje="Cargando presupuestos…" />
+            ) : (
+              <table className="tabla">
+                <thead>
+                  <tr>
+                    <th>Departamento</th>
+                    <th>Presupuesto (USD)</th>
+                    {esAdmin && <th></th>}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+                </thead>
+                <tbody>
+                  {departamentos.map((d) => (
+                    <tr key={d.id}>
+                      <td>{d.nombre}</td>
+                      <td>
+                        <input
+                          className="input-tabla"
+                          type="number"
+                          inputMode="decimal"
+                          step="0.01"
+                          min="0"
+                          value={montos[d.id] ?? ''}
+                          onChange={(e) =>
+                            setMontos((prev) => ({ ...prev, [d.id]: e.target.value }))
+                          }
+                          disabled={!esAdmin}
+                          placeholder="0.00"
+                        />
+                      </td>
+                      {esAdmin && (
+                        <td className="acciones">
+                          <button
+                            type="button"
+                            className="btn-secundario btn-sm"
+                            onClick={() => void guardar(d.id)}
+                          >
+                            Guardar
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
       </div>
 
       {esAdmin && (

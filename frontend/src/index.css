@@ -1849,3 +1849,72 @@ p {
   );
   background-color: transparent !important;
 }
+
+/* ---------- Acciones rápidas de presupuestos ---------- */
+.presupuesto-acciones-rapidas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: var(--gris-50);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+}
+
+/* ---------- Resumen anual de presupuestos ---------- */
+.resumen-anio-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.resumen-anio-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem;
+  background-color: #fff;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  text-align: center;
+}
+
+.resumen-anio-mes {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gris-500);
+}
+
+.resumen-anio-monto {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--gris-900);
+}
+
+.resumen-anio-total {
+  background-color: var(--mod-color-soft);
+  border-color: color-mix(in srgb, var(--mod-color) 30%, transparent);
+}
+
+.resumen-anio-total .resumen-anio-mes {
+  color: var(--mod-color-dark);
+}
+
+.resumen-anio-total .resumen-anio-monto {
+  color: var(--mod-color-dark);
+  font-size: 1.25rem;
+}
+
+@media (max-width: 640px) {
+  .presupuesto-acciones-rapidas {
+    flex-direction: column;
+  }
+
+  .resumen-anio-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

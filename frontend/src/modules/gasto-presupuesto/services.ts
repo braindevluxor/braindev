@@ -183,4 +183,38 @@ export const gpService = {
     if (error) return { data: null, error: { message: error.message } }
     return { data: null, error: null }
   },
+
+  async listarPresupuestosAnio(anio: number): Promise<RespuestaBackend<Presupuesto[]>> {
+    const { data, error } = await supabase
+      .from('presupuestos')
+      .select('*')
+      .eq('anio', anio)
+      .order('mes', { ascending: true })
+    if (error) return { data: null, error: { message: error.message } }
+    return {
+      data: ((data ?? []) as Record<string, unknown>[]).map(mapearPresupuesto),
+      error: null,
+    }
+  },
+
+  async copiarPresupuesto(
+    departamentoId: string,
+    anioOrigen: number,
+    mesOrigen: number,
+    anioDestino: number,
+    mesDestino: number,
+  ): Promise<RespuestaBackend<null>> {
+    const origen = await this.listarPresupuestos(anioOrigen, mesOrigen)
+    if (origen.error) return { data: null, error: { message: origen.error.message } }
+    const presupuesto = (origen.data ?? []).find((p) => p.departamento_id === departamentoId)
+    if (!presupuesto) {
+      return { data: null, error: { message: 'No hay presupuesto en el mes de origen' } }
+    }
+    return this.guardarPresupuesto({
+      departamento_id: departamentoId,
+      anio: anioDestino,
+      mes: mesDestino,
+      monto_usd: presupuesto.monto_usd,
+    })
+  },
 }
