@@ -182,73 +182,21 @@ export default function PresupuestosTab() {
     : ''
 
   return (
-    <div className="presupuestos-layout">
-      <aside className="presupuestos-sidebar">
-        <div className="sidebar-header">
-          <h3>Unidades</h3>
+    <div className="presupuestos-container">
+      <div className="presupuestos-header">
+        <div className="presupuestos-header-info">
+          <h2>{nombreMes(anio, mes)}</h2>
+          <span className="presupuestos-total">{formatoUsd(totalMes)}</span>
+        </div>
+        <div className="presupuestos-header-acciones">
+          <input
+            type="month"
+            value={periodo}
+            onChange={(e) => setPeriodo(e.target.value)}
+            className="input-month"
+          />
           {esAdmin && (
-            <button
-              type="button"
-              className="btn-primario btn-sm"
-              onClick={() => setModalDeptoAbierto(true)}
-            >
-              + Nueva
-            </button>
-          )}
-        </div>
-
-        <div className="sidebar-lista">
-          {departamentos.length === 0 ? (
-            <p className="sidebar-vacio">Sin unidades</p>
-          ) : (
-            departamentos.map((d) => {
-              const presupuesto = presupuestosMes.find((p) => p.departamento_id === d.id)
-              const seleccionado = deptoSeleccionado === d.id
-              return (
-                <div
-                  key={d.id}
-                  className={`sidebar-item ${seleccionado ? 'seleccionado' : ''}`}
-                  onClick={() => setDeptoSeleccionado(seleccionado ? null : d.id)}
-                >
-                  <div className="sidebar-item-info">
-                    <span className="sidebar-item-nombre">{d.nombre}</span>
-                    <span className="sidebar-item-monto">
-                      {formatoUsd(presupuesto?.monto_usd ?? 0)}
-                    </span>
-                  </div>
-                  {esAdmin && (
-                    <button
-                      type="button"
-                      className="sidebar-item-eliminar"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        void eliminarDepartamento(d)
-                      }}
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
-              )
-            })
-          )}
-        </div>
-      </aside>
-
-      <main className="presupuestos-main">
-        <div className="main-header">
-          <div className="main-header-info">
-            <h2>{nombreMes(anio, mes)}</h2>
-            <span className="main-total">{formatoUsd(totalMes)}</span>
-          </div>
-          <div className="main-header-acciones">
-            <input
-              type="month"
-              value={periodo}
-              onChange={(e) => setPeriodo(e.target.value)}
-              className="input-month"
-            />
-            {esAdmin && (
+            <>
               <button
                 type="button"
                 className="btn-secundario btn-sm"
@@ -256,94 +204,116 @@ export default function PresupuestosTab() {
               >
                 ← Copiar mes anterior
               </button>
+              <button
+                type="button"
+                className="btn-primario"
+                onClick={() => setModalDeptoAbierto(true)}
+              >
+                + Nueva unidad
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {error && <div className="alerta error">{error}</div>}
+      {aviso && <div className="alerta exito">{aviso}</div>}
+
+      <div className="tabla-contenedor">
+        {cargandoMes ? (
+          <Cargando mensaje="Cargando…" />
+        ) : (
+          <table className="tabla">
+            <thead>
+              <tr>
+                <th>Unidad presupuestaria</th>
+                <th className="td-der">Presupuesto (USD)</th>
+                {esAdmin && <th className="td-der">Acciones</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {departamentos.map((d) => (
+                <tr key={d.id} className={deptoSeleccionado === d.id ? 'fila-seleccionada' : ''}>
+                  <td>
+                    <button
+                      type="button"
+                      className="btn-enlace-tabla"
+                      onClick={() => setDeptoSeleccionado(deptoSeleccionado === d.id ? null : d.id)}
+                    >
+                      {d.nombre}
+                    </button>
+                  </td>
+                  <td className="td-der">
+                    {esAdmin ? (
+                      <input
+                        className="input-tabla input-tabla-der"
+                        type="number"
+                        inputMode="decimal"
+                        step="0.01"
+                        min="0"
+                        value={montos[d.id] ?? ''}
+                        onChange={(e) =>
+                          setMontos((prev) => ({ ...prev, [d.id]: e.target.value }))
+                        }
+                        placeholder="0.00"
+                      />
+                    ) : (
+                      formatoUsd(Number(montos[d.id]) || 0)
+                    )}
+                  </td>
+                  {esAdmin && (
+                    <td className="td-der acciones">
+                      <button
+                        type="button"
+                        className="btn-primario btn-sm"
+                        onClick={() => void guardar(d.id)}
+                      >
+                        Guardar
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-peligro btn-sm"
+                        onClick={() => void eliminarDepartamento(d)}
+                      >
+                        Eliminar
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {deptoSeleccionado && (
+        <div className="historial-panel">
+          <div className="historial-header">
+            <h3>Historial: {deptoNombre}</h3>
+            <button
+              type="button"
+              className="btn-secundario btn-sm"
+              onClick={() => setDeptoSeleccionado(null)}
+            >
+              × Cerrar
+            </button>
+          </div>
+          <div className="historial-grid">
+            {cargandoHistorial ? (
+              <Cargando mensaje="Cargando…" />
+            ) : historialPorMes.length === 0 ? (
+              <p className="vacio">Sin historial</p>
+            ) : (
+              historialPorMes.map(([periodo, monto]) => (
+                <div key={periodo} className="historial-item">
+                  <span className="historial-periodo">{periodo}</span>
+                  <strong className="historial-monto">{formatoUsd(monto)}</strong>
+                </div>
+              ))
             )}
           </div>
         </div>
-
-        {error && <div className="alerta error">{error}</div>}
-        {aviso && <div className="alerta exito">{aviso}</div>}
-
-        <div className="tabla-contenedor">
-          {cargandoMes ? (
-            <Cargando mensaje="Cargando…" />
-          ) : (
-            <table className="tabla">
-              <thead>
-                <tr>
-                  <th>Unidad</th>
-                  <th className="td-der">Presupuesto (USD)</th>
-                  {esAdmin && <th></th>}
-                </tr>
-              </thead>
-              <tbody>
-                {departamentos.map((d) => (
-                  <tr key={d.id} className={deptoSeleccionado === d.id ? 'fila-seleccionada' : ''}>
-                    <td>{d.nombre}</td>
-                    <td className="td-der">
-                      {esAdmin ? (
-                        <input
-                          className="input-tabla input-tabla-der"
-                          type="number"
-                          inputMode="decimal"
-                          step="0.01"
-                          min="0"
-                          value={montos[d.id] ?? ''}
-                          onChange={(e) =>
-                            setMontos((prev) => ({ ...prev, [d.id]: e.target.value }))
-                          }
-                          placeholder="0.00"
-                        />
-                      ) : (
-                        formatoUsd(Number(montos[d.id]) || 0)
-                      )}
-                    </td>
-                    {esAdmin && (
-                      <td className="acciones">
-                        <button
-                          type="button"
-                          className="btn-primario btn-sm"
-                          onClick={() => void guardar(d.id)}
-                        >
-                          Guardar
-                        </button>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-
-        {deptoSeleccionado && (
-          <div className="historial-panel">
-            <div className="historial-header">
-              <h3>Historial: {deptoNombre}</h3>
-              <button
-                type="button"
-                className="btn-secundario btn-sm"
-                onClick={() => setDeptoSeleccionado(null)}
-              >
-                ×
-              </button>
-            </div>
-            <div className="historial-grid">
-              {cargandoHistorial ? (
-                <Cargando mensaje="Cargando…" />
-              ) : historialPorMes.length === 0 ? (
-                <p className="vacio">Sin historial</p>
-              ) : (
-                historialPorMes.map(([periodo, monto]) => (
-                  <div key={periodo} className="historial-item">
-                    <span className="historial-periodo">{periodo}</span>
-                    <strong className="historial-monto">{formatoUsd(monto)}</strong>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-      </main>
+      )}
 
       {modalDeptoAbierto && (
         <div className="modal-fondo" onClick={() => setModalDeptoAbierto(false)}>
