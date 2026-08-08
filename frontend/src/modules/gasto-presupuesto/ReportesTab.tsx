@@ -10,10 +10,7 @@ import {
   parsearAnioMes,
   rangoMes,
 } from './utils'
-
-interface Props {
-  departamentos: Departamento[]
-}
+import { useContextoGastoPresupuesto } from './contexto'
 
 interface FilaReporte {
   departamento: Departamento
@@ -56,7 +53,8 @@ function colorUso(porcentaje: number): string {
   return 'uso-excedido'
 }
 
-export default function ReportesTab({ departamentos }: Props) {
+export default function ReportesTab() {
+  const { departamentos } = useContextoGastoPresupuesto()
   const [tipoPeriodo, setTipoPeriodo] = useState<TipoPeriodo>('mes')
   const [periodo, setPeriodo] = useState(anioMesValor())
   const [anio, setAnio] = useState(String(anioMesActual().anio))

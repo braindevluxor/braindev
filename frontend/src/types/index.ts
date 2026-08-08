@@ -1,3 +1,5 @@
+import type { ComponentType, SVGProps } from 'react'
+
 export type Rol = 'admin' | 'usuario'
 
 export interface Perfil {
@@ -21,6 +23,13 @@ export interface PaletaColor {
   contraste: string
 }
 
+export interface PestanaConfig {
+  id: string
+  etiqueta: string
+  ruta: string
+  icono: ComponentType<SVGProps<SVGSVGElement>>
+}
+
 export interface ModuloConfig {
   id: string
   nombre: string
@@ -28,6 +37,7 @@ export interface ModuloConfig {
   ruta: string
   habilitado: boolean
   color: PaletaColor
+  pestanas: PestanaConfig[]
 }
 
 export interface RespuestaBackend<T> {

@@ -3,19 +3,16 @@ import { useAuth } from '../../contexts/AuthContext'
 import type { Departamento, Presupuesto } from '../../types'
 import { gpService } from './services'
 import { anioMesActual, nombreMes, parsearAnioMes, formatoUsd } from './utils'
-
-interface Props {
-  departamentos: Departamento[]
-  onCambioDepartamentos: () => void
-}
+import { useContextoGastoPresupuesto } from './contexto'
 
 function anioMesValor(): string {
   const { anio, mes } = anioMesActual()
   return `${anio}-${String(mes).padStart(2, '0')}`
 }
 
-export default function PresupuestosTab({ departamentos, onCambioDepartamentos }: Props) {
+export default function PresupuestosTab() {
   const { perfil } = useAuth()
+  const { departamentos, recargarDepartamentos } = useContextoGastoPresupuesto()
   const esAdmin = perfil?.role === 'admin'
 
   const [periodo, setPeriodo] = useState(anioMesValor())
@@ -106,7 +103,7 @@ export default function PresupuestosTab({ departamentos, onCambioDepartamentos }
     setNuevoDepto('')
     setModalDeptoAbierto(false)
     mostrarAviso('Departamento creado')
-    onCambioDepartamentos()
+    recargarDepartamentos()
   }
 
   async function eliminarDepartamento(d: Departamento) {
@@ -123,7 +120,7 @@ export default function PresupuestosTab({ departamentos, onCambioDepartamentos }
       return
     }
     mostrarAviso('Departamento eliminado')
-    onCambioDepartamentos()
+    recargarDepartamentos()
   }
 
   return (

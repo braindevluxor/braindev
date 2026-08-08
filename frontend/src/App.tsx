@@ -3,10 +3,13 @@ import { useAuth } from './contexts/AuthContext'
 import Login from './components/Login'
 import NavBar from './components/NavBar'
 import UsuariosPage from './modules/usuarios/UsuariosPage'
-import GastoPresupuestoPage from './modules/gasto-presupuesto/GastoPresupuestoPage'
+import GastoPresupuestoPage, {
+  RegistroTab,
+  PresupuestosTab,
+  ReportesTab,
+} from './modules/gasto-presupuesto'
 import { MODULOS, obtenerModuloPorRuta } from './config/modules'
 import type { CSSProperties } from 'react'
-
 function PantallaCarga() {
   return (
     <div className="pantalla-carga">
@@ -57,7 +60,12 @@ export default function App() {
       <Route path="/" element={<AppShell />}>
         <Route index element={<Navigate to="/usuarios" replace />} />
         <Route path="usuarios" element={<UsuariosPage />} />
-        <Route path="gasto-presupuesto" element={<GastoPresupuestoPage />} />
+        <Route path="gasto-presupuesto" element={<GastoPresupuestoPage />}>
+          <Route index element={<Navigate to="registro" replace />} />
+          <Route path="registro" element={<RegistroTab />} />
+          <Route path="presupuestos" element={<PresupuestosTab />} />
+          <Route path="reportes" element={<ReportesTab />} />
+        </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

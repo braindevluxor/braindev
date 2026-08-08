@@ -1,3 +1,4 @@
+import { IconoPresupuestos, IconoRegistro, IconoReportes } from '../components/pestanaIconos'
 import type { ModuloConfig } from '../types'
 
 /**
@@ -19,6 +20,7 @@ export const MODULOS: ModuloConfig[] = [
     descripcion: 'Gestión de cuentas, roles y estado de los usuarios del sistema.',
     ruta: '/usuarios',
     habilitado: true,
+    pestanas: [],
     color: {
       principal: '#2563EB',
       oscuro: '#1E40AF',
@@ -32,6 +34,16 @@ export const MODULOS: ModuloConfig[] = [
     descripcion: 'Registro de gastos e ingresos en USD/Bs y comparación contra presupuesto.',
     ruta: '/gasto-presupuesto',
     habilitado: true,
+    pestanas: [
+      { id: 'registro', etiqueta: 'Registro', ruta: '/gasto-presupuesto/registro', icono: IconoRegistro },
+      {
+        id: 'presupuestos',
+        etiqueta: 'Presupuestos',
+        ruta: '/gasto-presupuesto/presupuestos',
+        icono: IconoPresupuestos,
+      },
+      { id: 'reportes', etiqueta: 'Reportes', ruta: '/gasto-presupuesto/reportes', icono: IconoReportes },
+    ],
     color: {
       principal: '#0891B2',
       oscuro: '#0E7490',
@@ -44,5 +56,7 @@ export const MODULOS: ModuloConfig[] = [
 export const MODULOS_HABILITADOS = MODULOS.filter((m) => m.habilitado)
 
 export function obtenerModuloPorRuta(ruta: string): ModuloConfig | undefined {
-  return MODULOS.find((m) => m.ruta === ruta)
+  return MODULOS.find(
+    (m) => ruta === m.ruta || ruta.startsWith(`${m.ruta}/`) || m.pestanas.some((p) => p.ruta === ruta),
+  )
 }

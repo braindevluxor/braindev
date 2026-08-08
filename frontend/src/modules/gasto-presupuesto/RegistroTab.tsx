@@ -1,12 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
-import type { Departamento, Moneda, Movimiento, TipoMovimiento } from '../../types'
+import type { Moneda, Movimiento, TipoMovimiento } from '../../types'
 import { gpService, type DatosMovimiento } from './services'
 import { formatoBs, formatoFecha, formatoUsd } from './utils'
-
-interface Props {
-  departamentos: Departamento[]
-}
+import { useContextoGastoPresupuesto } from './contexto'
 
 const TIPOS: { valor: TipoMovimiento; etiqueta: string }[] = [
   { valor: 'gasto', etiqueta: 'Gasto' },
@@ -24,8 +21,9 @@ function hoyISO(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-export default function RegistroTab({ departamentos }: Props) {
+export default function RegistroTab() {
   const { perfil } = useAuth()
+  const { departamentos } = useContextoGastoPresupuesto()
 
   const [vista, setVista] = useState<Vista>('historial')
 

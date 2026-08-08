@@ -509,10 +509,20 @@ p {
   letter-spacing: -0.01em;
 }
 
-.navbar-modulos {
+.navbar-pestanas {
   flex: 1;
   display: flex;
+  align-items: center;
   justify-content: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.navbar-acciones {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: max-content;
 }
 
 .navbar-usuario {
@@ -548,6 +558,107 @@ p {
   color: var(--mod-color-contrast);
   font-weight: 700;
   font-size: 0.9rem;
+}
+
+/* ---------- Menú de usuario (3 puntos) ---------- */
+.menu-usuario {
+  position: relative;
+}
+
+.menu-usuario-boton {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: rgb(255 255 255 / 0.16);
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.menu-usuario-boton:hover {
+  background: rgb(255 255 255 / 0.24);
+}
+
+.menu-usuario-boton svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.menu-usuario-panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 13rem;
+  padding: 0.45rem;
+  background: #fff;
+  border: 1px solid var(--borde);
+  border-radius: 0.6rem;
+  box-shadow: var(--sombra-md);
+  color: var(--gris-900);
+}
+
+.menu-usuario-info {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.4rem 0.55rem 0.6rem;
+  border-bottom: 1px solid var(--borde);
+}
+
+.menu-usuario-info .navbar-avatar {
+  background: var(--mod-color);
+  color: var(--mod-color-contrast);
+  flex: none;
+}
+
+.menu-usuario-info div {
+  display: grid;
+  line-height: 1.25;
+  min-width: 0;
+}
+
+.menu-usuario-info strong {
+  font-size: 0.88rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-usuario-info small {
+  font-size: 0.74rem;
+  color: var(--gris-500);
+}
+
+.menu-usuario-salir {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 0.3rem;
+  padding: 0.55rem 0.6rem;
+  border: none;
+  border-radius: 0.45rem;
+  background: none;
+  color: #dc2626;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.menu-usuario-salir:hover {
+  background: #fef2f2;
+}
+
+.menu-usuario-salir svg {
+  width: 1rem;
+  height: 1rem;
 }
 
 .app-main {
@@ -600,8 +711,7 @@ p {
 .selector-modulos-lista {
   position: absolute;
   top: calc(100% + 0.5rem);
-  left: 50%;
-  transform: translateX(-50%);
+  right: 0;
   min-width: 20rem;
   margin: 0;
   padding: 0.35rem;
@@ -901,47 +1011,39 @@ p {
   font-size: 0.9rem;
 }
 
-/* ---------- Módulo Gasto vs Presupuesto ---------- */
-.nav-pestanas {
-  display: inline-flex;
-  gap: 0.25rem;
-  margin-bottom: 1.5rem;
-  padding: 0.3rem;
-  background: #fff;
-  border: 1px solid var(--borde);
-  border-radius: 0.75rem;
-  box-shadow: var(--sombra);
-}
-
+/* ---------- Pestanas de módulo (en la barra de navegación) ---------- */
 .nav-pestana {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
-  padding: 0.55rem 1rem;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.95rem;
   border: none;
   border-radius: 0.5rem;
-  background: none;
-  color: var(--gris-500);
+  background: transparent;
+  color: inherit;
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
-  transition: color 0.15s, background-color 0.15s;
+  opacity: 0.82;
+  transition: background-color 0.15s, opacity 0.15s;
 }
 
 .nav-pestana:hover {
-  color: var(--gris-900);
-  background: var(--gris-100);
+  opacity: 1;
+  background: rgb(255 255 255 / 0.14);
 }
 
 .nav-pestana.activa {
-  color: var(--mod-color-contrast);
-  background: var(--mod-color);
-  box-shadow: 0 2px 6px color-mix(in srgb, var(--mod-color) 35%, transparent);
+  opacity: 1;
+  background: rgb(255 255 255 / 0.22);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.25);
 }
 
 .nav-pestana-icono {
   display: inline-flex;
+  flex: none;
   width: 1.15rem;
   height: 1.15rem;
 }
@@ -952,14 +1054,12 @@ p {
 }
 
 @media (max-width: 640px) {
-  .nav-pestanas {
-    display: flex;
-    width: 100%;
+  .navbar-pestanas {
+    gap: 0.2rem;
   }
 
   .nav-pestana {
-    flex: 1;
-    justify-content: center;
+    padding: 0.5rem 0.6rem;
   }
 
   .nav-pestana-texto {
@@ -1355,8 +1455,30 @@ p {
 }
 
 @media (max-width: 640px) {
-  .navbar-usuario-info {
+  .navbar {
+    gap: 0.6rem;
+    padding: 0 0.8rem;
+  }
+
+  .navbar-titulo {
     display: none;
+  }
+
+  .navbar-acciones {
+    gap: 0.4rem;
+  }
+
+  .selector-modulos-actual {
+    min-width: 0;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .selector-modulos-actual > span:nth-of-type(2) {
+    display: none;
+  }
+
+  .menu-usuario-boton {
+    padding: 0.3rem;
   }
 
   .modulo-cabecera {
