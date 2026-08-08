@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Scale, Receipt } from '@/components/animate-ui/icons'
+import { IconoGasto, IconoIngreso, IconoSuperavit, IconoOperaciones } from '@/components/pestanaIconos'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Departamento, Movimiento, Presupuesto } from '../../types'
 import { gpService } from './services'
@@ -55,20 +55,20 @@ function colorUso(porcentaje: number): string {
   return 'uso-excedido'
 }
 
-function IconoGasto() {
-  return <ArrowDown size={24} animateOnHover />
+function IconoGastoCard() {
+  return <IconoGasto size={24} />
 }
 
-function IconoIngreso() {
-  return <ArrowUp size={24} animateOnHover />
+function IconoIngresoCard() {
+  return <IconoIngreso size={24} />
 }
 
-function IconoSuperavit() {
-  return <Scale size={24} animateOnHover />
+function IconoSuperavitCard() {
+  return <IconoSuperavit size={24} />
 }
 
-function IconoOperaciones() {
-  return <Receipt size={24} animateOnHover />
+function IconoOperacionesCard() {
+  return <IconoOperaciones size={24} />
 }
 
 export default function ReportesTab() {

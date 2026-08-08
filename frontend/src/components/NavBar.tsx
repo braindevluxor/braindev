@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { MoreVertical, LogOut } from '@/components/animate-ui/icons'
+import { IconoMenu, IconoLogout } from '@/components/pestanaIconos'
 import { useAuth } from '../contexts/AuthContext'
 import ModuleSelector from './ModuleSelector'
 import type { ModuloConfig } from '../types'
@@ -96,7 +96,7 @@ export default function NavBar({ moduloActivo }: Props) {
             <span className="navbar-avatar" style={{ backgroundColor: moduloActivo.color.principal }}>
               {inicial}
             </span>
-            <MoreVertical size={18} animateOnHover />
+            <IconoMenu size={18} />
           </button>
 
           {menuAbierto && (
@@ -116,7 +116,7 @@ export default function NavBar({ moduloActivo }: Props) {
                 onClick={onCerrarSesion}
                 disabled={cerrando}
               >
-                <LogOut size={16} animateOnHover />
+                <IconoLogout size={16} />
                 {cerrando ? 'Cerrando…' : 'Cerrar sesión'}
               </button>
             </div>
