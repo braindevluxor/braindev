@@ -4,6 +4,7 @@ import type { Moneda, Movimiento, TipoMovimiento } from '../../types'
 import { gpService, type DatosMovimiento } from './services'
 import { formatoBs, formatoFecha, formatoUsd } from './utils'
 import { useContextoGastoPresupuesto } from './contexto'
+import Cargando from '../../components/Cargando'
 
 const TIPOS: { valor: TipoMovimiento; etiqueta: string }[] = [
   { valor: 'gasto', etiqueta: 'Gasto' },
@@ -358,7 +359,7 @@ export default function RegistroTab() {
 
       <div className="tabla-contenedor">
         {cargando ? (
-          <p className="vacio">Cargando movimientos…</p>
+          <Cargando mensaje="Cargando movimientos…" />
         ) : movimientos.length === 0 ? (
           <p className="vacio">Aún no hay movimientos registrados.</p>
         ) : (

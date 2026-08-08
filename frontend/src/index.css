@@ -74,6 +74,32 @@ p {
   }
 }
 
+/* ---------- Carga en línea (bloques de datos) ---------- */
+.cargando {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--gris-500);
+  font-size: 0.9rem;
+}
+
+.cargando-compacto {
+  padding: 1.5rem 1rem;
+}
+
+.cargando-anillo {
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 3px solid var(--gris-200);
+  border-top-color: var(--mod-color);
+  border-right-color: color-mix(in srgb, var(--mod-color) 45%, transparent);
+  border-radius: 50%;
+  animation: girar 0.8s linear infinite;
+}
+
 /* ---------- Login ---------- */
 .login-fondo {
   min-height: 100vh;
@@ -1193,71 +1219,100 @@ p {
 }
 
 .kpi-card {
-  display: grid;
-  gap: 0.15rem;
-  padding: 1.25rem 1.35rem;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1.1rem 1.2rem;
   border-radius: 0.7rem;
   border: 1px solid var(--borde);
   background: #fff;
   box-shadow: var(--sombra);
-  position: relative;
-  overflow: hidden;
 }
 
-.kpi-card::before {
-  content: '';
-  position: absolute;
-  inset: 0 auto auto 0;
-  width: 4px;
-  height: 100%;
-  border-radius: 0.7rem 0 0 0.7rem;
+.kpi-icono {
+  display: grid;
+  place-content: center;
+  flex: none;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 0.65rem;
+  background: var(--gris-100);
+  color: var(--gris-600);
 }
 
-.kpi-card span {
-  font-size: 0.76rem;
+.kpi-icono svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.kpi-cuerpo {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.kpi-cuerpo span {
+  font-size: 0.74rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--gris-500);
 }
 
-.kpi-card strong {
-  font-size: 1.55rem;
+.kpi-cuerpo strong {
+  font-size: 1.45rem;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--gris-900);
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.kpi-card small {
+.kpi-cuerpo small {
   color: var(--gris-500);
   font-size: 0.78rem;
 }
 
-.kpi-gasto::before {
-  background: #dc2626;
+.kpi-gasto .kpi-icono {
+  background: #fee2e2;
+  color: #dc2626;
 }
 
 .kpi-gasto strong {
   color: #dc2626;
 }
 
-.kpi-ingreso::before {
-  background: #16a34a;
+.kpi-ingreso .kpi-icono {
+  background: #dcfce7;
+  color: #16a34a;
 }
 
 .kpi-ingreso strong {
   color: #16a34a;
 }
 
-.kpi-saldo::before {
-  background: var(--mod-color);
+.kpi-superavit .kpi-icono {
+  background: color-mix(in srgb, var(--mod-color) 14%, #fff);
+  color: var(--mod-color);
 }
 
-.kpi-saldo strong {
+.kpi-superavit strong {
   color: var(--mod-color-dark);
 }
 
-.kpi-saldo strong.texto-negativo {
+.kpi-operaciones .kpi-icono {
+  background: #e0e7ff;
+  color: #4f46e5;
+}
+
+.kpi-operaciones strong {
+  color: #4f46e5;
+}
+
+.kpi-card strong.texto-negativo,
+.kpi-card small.texto-negativo {
   color: #dc2626;
 }
 

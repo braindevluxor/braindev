@@ -3,6 +3,7 @@ import type { Perfil } from '../../types'
 import { useAuth } from '../../contexts/AuthContext'
 import { usuariosService } from './services'
 import UsuarioForm from './UsuarioForm'
+import Cargando from '../../components/Cargando'
 
 function formatearFecha(iso: string): string {
   const fecha = new Date(iso)
@@ -100,7 +101,7 @@ export default function UsuariosPage() {
 
       <div className="tabla-contenedor">
         {cargando ? (
-          <p className="vacio">Cargando usuarios…</p>
+          <Cargando mensaje="Cargando usuarios…" />
         ) : usuarios.length === 0 ? (
           <p className="vacio">
             No hay usuarios registrados. Crea el primer usuario con «Nuevo usuario».

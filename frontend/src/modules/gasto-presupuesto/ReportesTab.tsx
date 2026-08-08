@@ -1,3 +1,4 @@
+import { ArrowDownRight, ArrowUpRight, Scale, ReceiptText } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Departamento, Movimiento, Presupuesto } from '../../types'
 import { gpService } from './services'
@@ -11,6 +12,7 @@ import {
   rangoMes,
 } from './utils'
 import { useContextoGastoPresupuesto } from './contexto'
+import Cargando from '../../components/Cargando'
 
 interface FilaReporte {
   departamento: Departamento
@@ -51,6 +53,22 @@ function colorUso(porcentaje: number): string {
   if (porcentaje <= 85) return 'uso-medio'
   if (porcentaje <= 100) return 'uso-alto'
   return 'uso-excedido'
+}
+
+function IconoGasto() {
+  return <ArrowDownRight size={24} strokeWidth={1.9} />
+}
+
+function IconoIngreso() {
+  return <ArrowUpRight size={24} strokeWidth={1.9} />
+}
+
+function IconoSuperavit() {
+  return <Scale size={24} strokeWidth={1.9} />
+}
+
+function IconoOperaciones() {
+  return <ReceiptText size={24} strokeWidth={1.9} />
 }
 
 export default function ReportesTab() {
@@ -170,15 +188,28 @@ export default function ReportesTab() {
   }, [departamentos, movimientos, presupuestosEnPeriodo])
 
   const totales = useMemo(() => {
-    return filas.reduce(
-      (acc, f) => ({
-        presupuesto: acc.presupuesto + f.presupuesto,
-        gasto: acc.gasto + f.gasto,
-        ingreso: acc.ingreso + f.ingreso,
-      }),
-      { presupuesto: 0, gasto: 0, ingreso: 0 },
-    )
-  }, [filas])
+    let presupuesto = 0
+    let gasto = 0
+    let ingreso = 0
+    let gastoBs = 0
+    let ingresoBs = 0
+    for (const f of filas) {
+      presupuesto += f.presupuesto
+      gasto += f.gasto
+      ingreso += f.ingreso
+    }
+    for (const m of movimientos) {
+      if (m.tipo === 'gasto') {
+        gastoBs += m.monto_bs
+      } else {
+        ingresoBs += m.monto_bs
+      }
+    }
+    return { presupuesto, gasto, ingreso, gastoBs, ingresoBs }
+  }, [filas, movimientos])
+
+  const superavit = totales.ingreso - totales.gasto
+  const superavitBs = totales.ingresoBs - totales.gastoBs
 
   const conMovimientos = movimientos.length > 0
 
@@ -267,30 +298,59 @@ export default function ReportesTab() {
         {error && <div className="alerta error">{error}</div>}
 
         {cargando ? (
-          <p className="vacio">Calculando…</p>
+          <Cargando mensaje="Calculando reportes…" />
         ) : !conMovimientos ? (
           <p className="vacio">No hay movimientos en este periodo.</p>
         ) : (
           <>
             <div className="kpi-grid">
               <div className="kpi-card kpi-gasto">
-                <span>Gasto</span>
-                <strong>{formatoUsd(totales.gasto)}</strong>
-                <small>{`${filas.filter((f) => f.gasto > 0).length} de ${filas.length} departamentos`}</small>
+                <span className="kpi-icono">
+                  <IconoGasto />
+                </span>
+                <div className="kpi-cuerpo">
+                  <span>Total de gasto</span>
+                  <strong>{formatoUsd(totales.gasto)}</strong>
+                  <small>{formatoBs(totales.gastoBs)}</small>
+                </div>
               </div>
               <div className="kpi-card kpi-ingreso">
-                <span>Ingreso</span>
-                <strong>{formatoUsd(totales.ingreso)}</strong>
-                <small>{`${filas.filter((f) => f.ingreso > 0).length} de ${filas.length} departamentos`}</small>
+                <span className="kpi-icono">
+                  <IconoIngreso />
+                </span>
+                <div className="kpi-cuerpo">
+                  <span>Total de ingreso</span>
+                  <strong>{formatoUsd(totales.ingreso)}</strong>
+                  <small>{formatoBs(totales.ingresoBs)}</small>
+                </div>
               </div>
-              <div className="kpi-card kpi-saldo">
-                <span>Saldo final</span>
-                <strong
-                  className={totales.presupuesto - totales.gasto + totales.ingreso < 0 ? 'texto-negativo' : ''}
-                >
-                  {formatoUsd(totales.presupuesto - totales.gasto + totales.ingreso)}
-                </strong>
-                <small>Presupuesto + Ingreso − Gasto</small>
+              <div className="kpi-card kpi-superavit">
+                <span className="kpi-icono">
+                  <IconoSuperavit />
+                </span>
+                <div className="kpi-cuerpo">
+                  <span>Superávit</span>
+                  <strong className={superavit < 0 ? 'texto-negativo' : ''}>
+                    {formatoUsd(superavit)}
+                  </strong>
+                  <small className={superavitBs < 0 ? 'texto-negativo' : ''}>
+                    {formatoBs(superavitBs)}
+                  </small>
+                </div>
+              </div>
+              <div className="kpi-card kpi-operaciones">
+                <span className="kpi-icono">
+                  <IconoOperaciones />
+                </span>
+                <div className="kpi-cuerpo">
+                  <span>Operaciones</span>
+                  <strong>{movimientos.length}</strong>
+                  <small>
+                    {`${filas.reduce((s, f) => s + (f.gasto > 0 ? 1 : 0), 0)} de gasto · ${
+                      filas.reduce((s, f) => s + (f.ingreso > 0 ? 1 : 0), 0)
+                    } de ingreso`}
+                  </small>
+                </div>
               </div>
             </div>
 

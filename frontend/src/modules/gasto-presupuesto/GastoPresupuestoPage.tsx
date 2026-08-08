@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import type { Departamento } from '../../types'
 import { gpService } from './services'
+import Cargando from '../../components/Cargando'
 
 export default function GastoPresupuestoPage() {
   const [departamentos, setDepartamentos] = useState<Departamento[]>([])
@@ -29,7 +30,7 @@ export default function GastoPresupuestoPage() {
       {error && <div className="alerta error">{error}</div>}
 
       {cargando ? (
-        <p className="vacio">Cargando módulo…</p>
+        <Cargando mensaje="Cargando módulo…" />
       ) : (
         <Outlet context={{ departamentos, recargarDepartamentos: cargarDepartamentos }} />
       )}

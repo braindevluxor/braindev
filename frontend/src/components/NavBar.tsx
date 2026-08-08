@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { Ellipsis, LogOut } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import ModuleSelector from './ModuleSelector'
 import type { ModuloConfig } from '../types'
@@ -92,9 +93,7 @@ export default function NavBar({ moduloActivo }: Props) {
             <span className="navbar-avatar" style={{ backgroundColor: moduloActivo.color.principal }}>
               {inicial}
             </span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M6 9h12M6 15h12" strokeLinecap="round" />
-            </svg>
+            <Ellipsis size={18} strokeWidth={2} />
           </button>
 
           {menuAbierto && (
@@ -114,21 +113,7 @@ export default function NavBar({ moduloActivo }: Props) {
                 onClick={onCerrarSesion}
                 disabled={cerrando}
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path d="m16 17 5-5-5-5" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M21 12H9" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <LogOut size={16} strokeWidth={2} />
                 {cerrando ? 'Cerrando…' : 'Cerrar sesión'}
               </button>
             </div>

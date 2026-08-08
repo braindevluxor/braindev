@@ -4,6 +4,7 @@ import type { Departamento, Presupuesto } from '../../types'
 import { gpService } from './services'
 import { anioMesActual, nombreMes, parsearAnioMes, formatoUsd } from './utils'
 import { useContextoGastoPresupuesto } from './contexto'
+import Cargando from '../../components/Cargando'
 
 function anioMesValor(): string {
   const { anio, mes } = anioMesActual()
@@ -151,7 +152,7 @@ export default function PresupuestosTab() {
 
         <div className="tabla-contenedor">
           {cargando ? (
-            <p className="vacio">Cargando…</p>
+            <Cargando mensaje="Cargando presupuestos…" />
           ) : (
             <table className="tabla">
               <thead>
