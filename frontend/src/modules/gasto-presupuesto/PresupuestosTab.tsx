@@ -178,10 +178,6 @@ export default function PresupuestosTab() {
     return Object.entries(mapa).sort(([a], [b]) => b.localeCompare(a))
   }, [historialDepto])
 
-  const deptoNombre = deptoSeleccionado
-    ? departamentos.find((d) => d.id === deptoSeleccionado)?.nombre ?? ''
-    : ''
-
   return (
     <div className="presupuestos-container">
       <div className="presupuestos-header">

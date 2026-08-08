@@ -57,27 +57,6 @@ function colorUso(porcentaje: number): string {
   return 'uso-excedido'
 }
 
-function IconoGastoCard() {
-  return <IconoGasto size={24} />
-}
-
-function IconoIngresoCard() {
-  return <IconoIngreso size={24} />
-}
-
-function IconoSuperavitCard() {
-  return <IconoSuperavit size={24} />
-}
-
-function IconoOperacionesCard() {
-  return <IconoOperaciones size={24} />
-}
-
-const COLORES_DEPARTAMENTO = [
-  '#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6',
-  '#8b5cf6', '#ef4444', '#14b8a6', '#f97316', '#06b6d4',
-]
-
 function generarCurvaSuave(puntos: { x: number; y: number }[]): string {
   if (puntos.length < 2) return ''
   let path = `M ${puntos[0].x},${puntos[0].y}`

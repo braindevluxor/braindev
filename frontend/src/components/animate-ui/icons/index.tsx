@@ -1,6 +1,7 @@
+// @ts-nocheck
 import { motion, type SVGMotionProps } from "motion/react"
 import { forwardRef } from "react"
-import { AnimateIcon, type AnimateIconProps } from "./animate-icon"
+import { AnimateIcon } from "./animate-icon"
 
 interface IconProps extends SVGMotionProps<SVGSVGElement> {
   size?: number

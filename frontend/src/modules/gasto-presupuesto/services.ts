@@ -272,8 +272,8 @@ export const gpService = {
       .select('departamento_id, departamentos(*)')
       .eq('usuario_id', usuarioId)
     if (error) return { data: null, error: { message: error.message } }
-    const departamentos = ((data ?? []) as Array<{ departamento_id: string; departamentos: Departamento }>)
-      .map((r) => r.departamentos)
+    const departamentos = ((data ?? []) as Array<{ departamento_id: string; departamentos: unknown }>)
+      .map((r) => r.departamentos as Departamento)
     return { data: departamentos, error: null }
   },
 

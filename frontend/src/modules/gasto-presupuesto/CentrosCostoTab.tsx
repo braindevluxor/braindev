@@ -24,7 +24,6 @@ export default function CentrosCostoTab() {
   // Modal centro de costo
   const [modalCentroCosto, setModalCentroCosto] = useState(false)
   const [editandoCentroCosto, setEditandoCentroCosto] = useState<CentroCosto | null>(null)
-  const [razonSocialSeleccionada, setRazonSocialSeleccionada] = useState('')
   const [formCentroCosto, setFormCentroCosto] = useState({
     razon_social_id: '',
     nombre: '',
@@ -125,7 +124,6 @@ export default function CentrosCostoTab() {
   function abrirNuevoCentroCosto() {
     setEditandoCentroCosto(null)
     setFormCentroCosto({ razon_social_id: '', nombre: '', descripcion: '' })
-    setRazonSocialSeleccionada('')
     setModalCentroCosto(true)
   }
 
@@ -136,7 +134,6 @@ export default function CentrosCostoTab() {
       nombre: cc.nombre,
       descripcion: cc.descripcion ?? '',
     })
-    setRazonSocialSeleccionada(cc.razon_social_id)
     setModalCentroCosto(true)
   }
 
@@ -387,7 +384,6 @@ export default function CentrosCostoTab() {
                   value={formCentroCosto.razon_social_id}
                   onChange={(e) => {
                     setFormCentroCosto({ ...formCentroCosto, razon_social_id: e.target.value })
-                    setRazonSocialSeleccionada(e.target.value)
                   }}
                   required
                 >

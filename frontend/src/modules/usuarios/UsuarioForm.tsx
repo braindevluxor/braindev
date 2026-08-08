@@ -51,7 +51,6 @@ export default function UsuarioForm() {
     if (esEdicion && id) {
       const res = await usuariosService.actualizar({
         user_id: id,
-        email,
         full_name: fullName,
         role,
       })
