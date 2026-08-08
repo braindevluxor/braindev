@@ -14,6 +14,8 @@ import {
 import { useContextoGastoPresupuesto } from './contexto'
 import Cargando from '../../components/Cargando'
 
+type VistaReporte = 'tabla' | 'grafico'
+
 interface FilaReporte {
   departamento: Departamento
   presupuesto: number
@@ -71,6 +73,154 @@ function IconoOperacionesCard() {
   return <IconoOperaciones size={24} />
 }
 
+const COLORES_DEPARTAMENTO = [
+  '#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6',
+  '#8b5cf6', '#ef4444', '#14b8a6', '#f97316', '#06b6d4',
+]
+
+function generarCurvaSuave(puntos: { x: number; y: number }[]): string {
+  if (puntos.length < 2) return ''
+  let path = `M ${puntos[0].x},${puntos[0].y}`
+  for (let i = 0; i < puntos.length - 1; i++) {
+    const p0 = puntos[Math.max(0, i - 1)]
+    const p1 = puntos[i]
+    const p2 = puntos[i + 1]
+    const p3 = puntos[Math.min(puntos.length - 1, i + 2)]
+    const cp1x = p1.x + (p2.x - p0.x) / 6
+    const cp1y = p1.y + (p2.y - p0.y) / 6
+    const cp2x = p2.x - (p3.x - p1.x) / 6
+    const cp2y = p2.y - (p3.y - p1.y) / 6
+    path += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.x},${p2.y}`
+  }
+  return path
+}
+
+function GraficoCurvas({ filas }: { filas: FilaReporte[] }) {
+  const ancho = 600
+  const alto = 300
+  const margen = { top: 20, right: 20, bottom: 60, left: 60 }
+  const anchoGrafico = ancho - margen.left - margen.right
+  const altoGrafico = alto - margen.top - margen.bottom
+
+  const maxGasto = Math.max(...filas.map((f) => f.gasto), 1)
+  const maxPresupuesto = Math.max(...filas.map((f) => f.presupuesto), 1)
+  const maxValor = Math.max(maxGasto, maxPresupuesto) * 1.1
+
+  const filasConDatos = filas.filter((f) => f.gasto > 0 || f.presupuesto > 0)
+
+  if (filasConDatos.length === 0) {
+    return <p className="vacio">No hay datos para graficar.</p>
+  }
+
+  const pasoX = filasConDatos.length > 1 ? anchoGrafico / (filasConDatos.length - 1) : 0
+
+  const puntosGasto = filasConDatos.map((f, i) => ({
+    x: margen.left + i * pasoX,
+    y: margen.top + altoGrafico - (f.gasto / maxValor) * altoGrafico,
+  }))
+
+  const puntosPresupuesto = filasConDatos.map((f, i) => ({
+    x: margen.left + i * pasoX,
+    y: margen.top + altoGrafico - (f.presupuesto / maxValor) * altoGrafico,
+  }))
+
+  const curvaGasto = generarCurvaSuave(puntosGasto)
+  const curvaPresupuesto = generarCurvaSuave(puntosPresupuesto)
+
+  const lineasY = [0, 0.25, 0.5, 0.75, 1]
+
+  return (
+    <div className="grafico-contenedor">
+      <svg viewBox={`0 0 ${ancho} ${alto}`} className="grafico-svg">
+        {lineasY.map((pct, i) => {
+          const y = margen.top + altoGrafico - pct * altoGrafico
+          return (
+            <g key={i}>
+              <line
+                x1={margen.left}
+                y1={y}
+                x2={ancho - margen.right}
+                y2={y}
+                stroke="currentColor"
+                strokeOpacity={0.1}
+                strokeDasharray="4,4"
+              />
+              <text
+                x={margen.left - 8}
+                y={y + 4}
+                textAnchor="end"
+                fontSize="10"
+                fill="currentColor"
+                fillOpacity={0.5}
+              >
+                {formatoUsd(maxValor * pct)}
+              </text>
+            </g>
+          )
+        })}
+
+        {curvaPresupuesto && (
+          <path
+            d={curvaPresupuesto}
+            fill="none"
+            stroke="#10b981"
+            strokeWidth="2.5"
+            strokeDasharray="6,4"
+          />
+        )}
+
+        {curvaGasto && (
+          <path
+            d={curvaGasto}
+            fill="none"
+            stroke="#ef4444"
+            strokeWidth="2.5"
+          />
+        )}
+
+        {puntosPresupuesto.map((p, i) => (
+          <circle key={`pres-${i}`} cx={p.x} cy={p.y} r="4" fill="#10b981" />
+        ))}
+
+        {puntosGasto.map((p, i) => (
+          <circle key={`gas-${i}`} cx={p.x} cy={p.y} r="4" fill="#ef4444" />
+        ))}
+
+        {filasConDatos.map((f, i) => {
+          const x = margen.left + i * pasoX
+          return (
+            <text
+              key={f.departamento.id}
+              x={x}
+              y={alto - margen.bottom + 20}
+              textAnchor="middle"
+              fontSize="10"
+              fill="currentColor"
+              fillOpacity={0.7}
+              transform={`rotate(-30, ${x}, ${alto - margen.bottom + 20})`}
+            >
+              {f.departamento.nombre.length > 12
+                ? f.departamento.nombre.slice(0, 12) + '...'
+                : f.departamento.nombre}
+            </text>
+          )
+        })}
+      </svg>
+
+      <div className="grafico-leyenda">
+        <span className="leyenda-item">
+          <span className="leyenda-color" style={{ backgroundColor: '#ef4444' }} />
+          Gasto
+        </span>
+        <span className="leyenda-item">
+          <span className="leyenda-color leyenda-linea" style={{ backgroundColor: '#10b981' }} />
+          Presupuesto
+        </span>
+      </div>
+    </div>
+  )
+}
+
 export default function ReportesTab() {
   const { departamentos } = useContextoGastoPresupuesto()
   const [tipoPeriodo, setTipoPeriodo] = useState<TipoPeriodo>('mes')
@@ -79,6 +229,7 @@ export default function ReportesTab() {
   const [desde, setDesde] = useState(primerDiaMesActual())
   const [hasta, setHasta] = useState(hoyISO())
   const [pagina, setPagina] = useState(1)
+  const [vista, setVista] = useState<VistaReporte>('tabla')
 
   const [movimientos, setMovimientos] = useState<Movimiento[]>([])
   const [presupuestos, setPresupuestos] = useState<Presupuesto[]>([])
@@ -354,6 +505,26 @@ export default function ReportesTab() {
               </div>
             </div>
 
+            <div className="vista-toggle">
+              <button
+                type="button"
+                className={`vista-toggle-btn ${vista === 'tabla' ? 'activo' : ''}`}
+                onClick={() => setVista('tabla')}
+              >
+                Tabla
+              </button>
+              <button
+                type="button"
+                className={`vista-toggle-btn ${vista === 'grafico' ? 'activo' : ''}`}
+                onClick={() => setVista('grafico')}
+              >
+                Gráfico
+              </button>
+            </div>
+
+            {vista === 'grafico' ? (
+              <GraficoCurvas filas={filas} />
+            ) : (
             <div className="tabla-contenedor">
               <table className="tabla">
                 <thead>
@@ -390,6 +561,7 @@ export default function ReportesTab() {
                 </tbody>
               </table>
             </div>
+            )}
 
             <p className="nota-ayuda">
               Movimientos del periodo ({movimientos.length} registros, máx.{' '}

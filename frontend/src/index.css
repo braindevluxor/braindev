@@ -1765,3 +1765,87 @@ p {
     flex-direction: column;
   }
 }
+
+/* ---------- Toggle de vista (Tabla/Gráfico) ---------- */
+.vista-toggle {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1.25rem;
+  padding: 0.25rem;
+  background-color: var(--gris-100);
+  border-radius: var(--radio);
+  width: fit-content;
+}
+
+.vista-toggle-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: calc(var(--radio) - 2px);
+  background-color: transparent;
+  color: var(--gris-500);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--transicion), color var(--transicion);
+}
+
+.vista-toggle-btn:hover {
+  color: var(--gris-700);
+}
+
+.vista-toggle-btn.activo {
+  background-color: #fff;
+  color: var(--gris-900);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+}
+
+/* ---------- Gráfico de curvas ---------- */
+.grafico-contenedor {
+  background-color: #fff;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.grafico-svg {
+  width: 100%;
+  height: auto;
+  max-height: 320px;
+}
+
+.grafico-leyenda {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--gris-100);
+}
+
+.leyenda-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gris-700);
+}
+
+.leyenda-color {
+  width: 1rem;
+  height: 0.25rem;
+  border-radius: 2px;
+}
+
+.leyenda-linea {
+  background-image: repeating-linear-gradient(
+    90deg,
+    currentColor 0,
+    currentColor 4px,
+    transparent 4px,
+    transparent 8px
+  );
+  background-color: transparent !important;
+}
