@@ -5,6 +5,7 @@ import { gpService } from './services'
 import { anioMesActual, nombreMes, formatoUsd } from './utils'
 import { useContextoGastoPresupuesto } from './contexto'
 import Cargando from '../../components/Cargando'
+import { FiChevronDown, FiChevronRight } from 'react-icons/fi'
 
 function anioMesValor(): string {
   const { anio, mes } = anioMesActual()
@@ -238,10 +239,15 @@ export default function PresupuestosTab() {
                     <td>
                       <button
                         type="button"
-                        className="btn-enlace-tabla"
+                        className="btn-expandir"
                         onClick={() => setDeptoSeleccionado(deptoSeleccionado === d.id ? null : d.id)}
                       >
-                        {d.nombre}
+                        {deptoSeleccionado === d.id ? (
+                          <FiChevronDown size={16} />
+                        ) : (
+                          <FiChevronRight size={16} />
+                        )}
+                        <span>{d.nombre}</span>
                       </button>
                     </td>
                     <td className="td-der">
