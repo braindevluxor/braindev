@@ -1,5 +1,5 @@
 import { IconoPresupuestos, IconoRegistro, IconoReportes } from '../components/pestanaIconos'
-import { FiUsers, FiUserPlus } from 'react-icons/fi'
+import { FiUsers } from 'react-icons/fi'
 import type { ModuloConfig } from '../types'
 
 /**
@@ -23,7 +23,6 @@ export const MODULOS: ModuloConfig[] = [
     habilitado: true,
     pestanas: [
       { id: 'lista', etiqueta: 'Usuarios', ruta: '/usuarios', icono: FiUsers },
-      { id: 'crear', etiqueta: 'Crear', ruta: '/usuarios/crear', icono: FiUserPlus },
     ],
     color: {
       principal: '#2563EB',
