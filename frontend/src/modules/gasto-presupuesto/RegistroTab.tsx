@@ -55,6 +55,7 @@ export default function RegistroTab() {
   const [erroresCampos, setErroresCampos] = useState<Record<string, string>>({})
   const [razonesSociales, setRazonesSociales] = useState<RazonSocial[]>([])
   const [centrosCosto, setCentrosCosto] = useState<CentroCosto[]>([])
+  const [centrosCostoFiltrados, setCentrosCostoFiltrados] = useState<CentroCosto[]>([])
   const [cargandoTasa, setCargandoTasa] = useState(false)
   const [mensajeTasa, setMensajeTasa] = useState<string | null>(null)
 
@@ -67,9 +68,11 @@ export default function RegistroTab() {
 
   const cargar = useCallback(async () => {
     setCargando(true)
-    const [resMov, resDir] = await Promise.all([
+    const [resMov, resDir, resRS, resCC] = await Promise.all([
       gpService.listarMovimientos(),
       gpService.listarDirectorio(),
+      gpService.listarRazonesSociales(),
+      gpService.listarCentrosCosto(),
     ])
     if (resMov.error) {
       setError(resMov.error.message)
@@ -81,6 +84,16 @@ export default function RegistroTab() {
       setDirectorio({})
     } else {
       setDirectorio(resDir.data ?? {})
+    }
+    if (resRS.error) {
+      setError(resRS.error.message)
+    } else {
+      setRazonesSociales(resRS.data ?? [])
+    }
+    if (resCC.error) {
+      setError(resCC.error.message)
+    } else {
+      setCentrosCosto(resCC.data ?? [])
     }
     setCargando(false)
   }, [])
@@ -100,6 +113,16 @@ export default function RegistroTab() {
       setConceptosDisponibles([])
     }
   }, [departamentoId])
+
+  useEffect(() => {
+    if (razonSocialId) {
+      const filtrados = centrosCosto.filter((cc) => cc.razon_social_id === razonSocialId)
+      setCentrosCostoFiltrados(filtrados)
+    } else {
+      setCentrosCostoFiltrados([])
+      setCentroCostoId('')
+    }
+  }, [razonSocialId, centrosCosto])
 
   async function cargarTasaAutomatica() {
     setCargandoTasa(true)
@@ -151,6 +174,8 @@ export default function RegistroTab() {
     setMonto('')
     setMoneda('USD')
     setTasa('')
+    setRazonSocialId('')
+    setCentroCostoId('')
     setEditando(null)
     setExitoForm(null)
     setError(null)
@@ -193,6 +218,7 @@ export default function RegistroTab() {
       moneda,
       monto: montoNumero,
       tasa_cambio: tasaNumero,
+      centro_costo_id: centroCostoId || undefined,
     }
 
     setEnviando(true)
@@ -234,6 +260,18 @@ export default function RegistroTab() {
     setMonto(String(m.monto))
     setMoneda(m.moneda)
     setTasa(String(m.tasa_cambio))
+    setCentroCostoId(m.centro_costo_id ?? '')
+    
+    // Buscar la razón social del centro de costo
+    if (m.centro_costo_id) {
+      const centro = centrosCosto.find((cc) => cc.id === m.centro_costo_id)
+      if (centro) {
+        setRazonSocialId(centro.razon_social_id)
+      }
+    } else {
+      setRazonSocialId('')
+    }
+    
     setError(null)
     setExitoForm(null)
     setVista('registrar')
@@ -265,15 +303,17 @@ export default function RegistroTab() {
     const termino = busqueda.toLowerCase()
     return movimientos.filter((m) => {
       const dep = departamentosPorId.get(m.departamento_id)
+      const centro = centrosCosto.find((cc) => cc.id === m.centro_costo_id)
       return (
         m.concepto.toLowerCase().includes(termino) ||
         m.numero_factura.toLowerCase().includes(termino) ||
         m.tipo.toLowerCase().includes(termino) ||
         dep?.nombre.toLowerCase().includes(termino) ||
+        centro?.nombre.toLowerCase().includes(termino) ||
         directorio[m.registrado_por]?.toLowerCase().includes(termino)
       )
     })
-  }, [movimientos, busqueda, departamentosPorId, directorio])
+  }, [movimientos, busqueda, departamentosPorId, centrosCosto, directorio])
 
   const totalPaginas = Math.ceil(movimientosFiltrados.length / tamanoPagina)
   const indiceInicio = (paginaActual - 1) * tamanoPagina
@@ -351,6 +391,40 @@ export default function RegistroTab() {
                 {erroresCampos.departamentoId && (
                   <span className="campo-error-msg">{erroresCampos.departamentoId}</span>
                 )}
+              </label>
+
+              <label className="campo">
+                <span>Razón Social</span>
+                <select
+                  value={razonSocialId}
+                  onChange={(e) => {
+                    setRazonSocialId(e.target.value)
+                    setCentroCostoId('')
+                  }}
+                >
+                  <option value="">Seleccionar…</option>
+                  {razonesSociales.map((rs) => (
+                    <option key={rs.id} value={rs.id}>
+                      {rs.nombre}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="campo">
+                <span>Centro de Costo</span>
+                <select
+                  value={centroCostoId}
+                  onChange={(e) => setCentroCostoId(e.target.value)}
+                  disabled={!razonSocialId}
+                >
+                  <option value="">Seleccionar…</option>
+                  {centrosCostoFiltrados.map((cc) => (
+                    <option key={cc.id} value={cc.id}>
+                      {cc.nombre}
+                    </option>
+                  ))}
+                </select>
               </label>
 
               <label className="campo">
@@ -552,6 +626,7 @@ export default function RegistroTab() {
                   <th>Fecha</th>
                   <th>Tipo</th>
                   <th>Departamento</th>
+                  <th>Centro de Costo</th>
                   <th>Concepto</th>
                   <th>Factura</th>
                   <th>Registrado</th>
@@ -563,6 +638,7 @@ export default function RegistroTab() {
               <tbody>
                 {movimientosPagina.map((m) => {
                   const dep = departamentosPorId.get(m.departamento_id)
+                  const centro = centrosCosto.find((cc) => cc.id === m.centro_costo_id)
                   return (
                     <tr key={m.id}>
                       <td>{formatoFecha(m.fecha)}</td>
@@ -572,6 +648,7 @@ export default function RegistroTab() {
                         </span>
                       </td>
                       <td>{dep?.nombre ?? '—'}</td>
+                      <td>{centro?.nombre ?? '—'}</td>
                       <td>{m.concepto || '—'}</td>
                       <td>{m.numero_factura || '—'}</td>
                       <td>{directorio[m.registrado_por] ?? 'Usuario'}</td>
