@@ -39,45 +39,6 @@ export const MODULOS: ModuloConfig[] = [
       contraste: '#FFFFFF',
     },
   },
-  {
-    id: 'inventario',
-    nombre: 'Inventario',
-    descripcion: 'Productos, stock y movimientos. Módulo en desarrollo.',
-    ruta: '/inventario',
-    habilitado: false,
-    color: {
-      principal: '#059669',
-      oscuro: '#065F46',
-      suave: '#ECFDF5',
-      contraste: '#FFFFFF',
-    },
-  },
-  {
-    id: 'ventas',
-    nombre: 'Ventas',
-    descripcion: 'Facturación, clientes y pedidos. Módulo en desarrollo.',
-    ruta: '/ventas',
-    habilitado: false,
-    color: {
-      principal: '#EA580C',
-      oscuro: '#9A3412',
-      suave: '#FFF7ED',
-      contraste: '#FFFFFF',
-    },
-  },
-  {
-    id: 'reportes',
-    nombre: 'Reportes',
-    descripcion: 'Indicadores y reportes generales. Módulo en desarrollo.',
-    ruta: '/reportes',
-    habilitado: false,
-    color: {
-      principal: '#7C3AED',
-      oscuro: '#5B21B6',
-      suave: '#F5F3FF',
-      contraste: '#FFFFFF',
-    },
-  },
 ]
 
 export const MODULOS_HABILITADOS = MODULOS.filter((m) => m.habilitado)
