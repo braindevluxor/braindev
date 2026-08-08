@@ -233,87 +233,85 @@ export default function PresupuestosTab() {
             </thead>
             <tbody>
               {departamentos.map((d) => (
-                <tr key={d.id} className={deptoSeleccionado === d.id ? 'fila-seleccionada' : ''}>
-                  <td>
-                    <button
-                      type="button"
-                      className="btn-enlace-tabla"
-                      onClick={() => setDeptoSeleccionado(deptoSeleccionado === d.id ? null : d.id)}
-                    >
-                      {d.nombre}
-                    </button>
-                  </td>
-                  <td className="td-der">
-                    {esAdmin ? (
-                      <input
-                        className="input-tabla input-tabla-der"
-                        type="number"
-                        inputMode="decimal"
-                        step="0.01"
-                        min="0"
-                        value={montos[d.id] ?? ''}
-                        onChange={(e) =>
-                          setMontos((prev) => ({ ...prev, [d.id]: e.target.value }))
-                        }
-                        placeholder="0.00"
-                      />
-                    ) : (
-                      formatoUsd(Number(montos[d.id]) || 0)
-                    )}
-                  </td>
-                  {esAdmin && (
-                    <td className="td-der acciones">
+                <>
+                  <tr key={d.id} className={deptoSeleccionado === d.id ? 'fila-seleccionada' : ''}>
+                    <td>
                       <button
                         type="button"
-                        className="btn-primario btn-sm"
-                        onClick={() => void guardar(d.id)}
+                        className="btn-enlace-tabla"
+                        onClick={() => setDeptoSeleccionado(deptoSeleccionado === d.id ? null : d.id)}
                       >
-                        Guardar
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-peligro btn-sm"
-                        onClick={() => void eliminarDepartamento(d)}
-                      >
-                        Eliminar
+                        {d.nombre}
                       </button>
                     </td>
+                    <td className="td-der">
+                      {esAdmin ? (
+                        <input
+                          className="input-tabla input-tabla-der"
+                          type="number"
+                          inputMode="decimal"
+                          step="0.01"
+                          min="0"
+                          value={montos[d.id] ?? ''}
+                          onChange={(e) =>
+                            setMontos((prev) => ({ ...prev, [d.id]: e.target.value }))
+                          }
+                          placeholder="0.00"
+                        />
+                      ) : (
+                        formatoUsd(Number(montos[d.id]) || 0)
+                      )}
+                    </td>
+                    {esAdmin && (
+                      <td className="td-der acciones">
+                        <button
+                          type="button"
+                          className="btn-primario btn-sm"
+                          onClick={() => void guardar(d.id)}
+                        >
+                          Guardar
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-peligro btn-sm"
+                          onClick={() => void eliminarDepartamento(d)}
+                        >
+                          Eliminar
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                  {deptoSeleccionado === d.id && (
+                    <tr key={`${d.id}-historial`} className="fila-historial">
+                      <td colSpan={esAdmin ? 3 : 2}>
+                        <div className="historial-expandible">
+                          <div className="historial-header">
+                            <h4>Historial de {d.nombre}</h4>
+                          </div>
+                          <div className="historial-grid">
+                            {cargandoHistorial ? (
+                              <Cargando mensaje="Cargando…" />
+                            ) : historialPorMes.length === 0 ? (
+                              <p className="vacio">Sin historial</p>
+                            ) : (
+                              historialPorMes.map(([periodo, monto]) => (
+                                <div key={periodo} className="historial-item">
+                                  <span className="historial-periodo">{periodo}</span>
+                                  <strong className="historial-monto">{formatoUsd(monto)}</strong>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
                   )}
-                </tr>
+                </>
               ))}
             </tbody>
           </table>
         )}
       </div>
-
-      {deptoSeleccionado && (
-        <div className="historial-panel">
-          <div className="historial-header">
-            <h3>Historial: {deptoNombre}</h3>
-            <button
-              type="button"
-              className="btn-secundario btn-sm"
-              onClick={() => setDeptoSeleccionado(null)}
-            >
-              × Cerrar
-            </button>
-          </div>
-          <div className="historial-grid">
-            {cargandoHistorial ? (
-              <Cargando mensaje="Cargando…" />
-            ) : historialPorMes.length === 0 ? (
-              <p className="vacio">Sin historial</p>
-            ) : (
-              historialPorMes.map(([periodo, monto]) => (
-                <div key={periodo} className="historial-item">
-                  <span className="historial-periodo">{periodo}</span>
-                  <strong className="historial-monto">{formatoUsd(monto)}</strong>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
 
       {modalDeptoAbierto && (
         <div className="modal-fondo" onClick={() => setModalDeptoAbierto(false)}>

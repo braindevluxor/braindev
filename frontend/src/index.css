@@ -1952,35 +1952,34 @@ p {
   background: #eff6ff;
 }
 
+.fila-historial {
+  background: #f8fafc;
+}
+
+.fila-historial td {
+  padding: 0;
+}
+
+.historial-expandible {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--borde);
+}
+
+.historial-expandible .historial-header {
+  margin-bottom: 1rem;
+}
+
+.historial-expandible .historial-header h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--gris-700);
+  margin: 0;
+}
+
 .acciones {
   display: flex;
   gap: 0.5rem;
   justify-content: flex-end;
-}
-
-/* ---------- Panel de historial ---------- */
-.historial-panel {
-  background-color: #fff;
-  border: 1px solid var(--borde);
-  border-radius: var(--radio);
-  padding: 1.25rem;
-  margin-top: 1.5rem;
-}
-
-.historial-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--gris-100);
-}
-
-.historial-header h3 {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--gris-900);
-  margin: 0;
 }
 
 .historial-grid {
