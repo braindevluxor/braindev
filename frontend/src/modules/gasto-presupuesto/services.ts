@@ -1,9 +1,11 @@
 import { supabase } from '../../lib/supabase'
 import type {
+  CentroCosto,
   Departamento,
   Moneda,
   Movimiento,
   Presupuesto,
+  RazonSocial,
   RespuestaBackend,
   TipoMovimiento,
 } from '../../types'
@@ -17,6 +19,7 @@ export interface DatosMovimiento {
   moneda: Moneda
   monto: number
   tasa_cambio: number
+  centro_costo_id?: string
 }
 
 export interface DatosPresupuesto {
@@ -45,8 +48,39 @@ function mapearMovimiento(fila: Record<string, unknown>): Movimiento {
     monto_usd: num(fila.monto_usd),
     monto_bs: num(fila.monto_bs),
     registrado_por: fila.registrado_por as string,
+    centro_costo_id: fila.centro_costo_id as string | undefined,
     created_at: fila.created_at as string,
   }
+}
+
+function mapearRazonSocial(fila: Record<string, unknown>): RazonSocial {
+  return {
+    id: fila.id as string,
+    nombre: fila.nombre as string,
+    rif: fila.rif as string | undefined,
+    direccion: fila.direccion as string | undefined,
+    telefono: fila.telefono as string | undefined,
+    email: fila.email as string | undefined,
+    activo: fila.activo as boolean,
+    created_at: fila.created_at as string,
+    updated_at: fila.updated_at as string,
+  }
+}
+
+function mapearCentroCosto(fila: Record<string, unknown>): CentroCosto {
+  const centro: CentroCosto = {
+    id: fila.id as string,
+    razon_social_id: fila.razon_social_id as string,
+    nombre: fila.nombre as string,
+    descripcion: fila.descripcion as string | undefined,
+    activo: fila.activo as boolean,
+    created_at: fila.created_at as string,
+    updated_at: fila.updated_at as string,
+  }
+  if (fila.razones_sociales) {
+    centro.razon_social = mapearRazonSocial(fila.razones_sociales as Record<string, unknown>)
+  }
+  return centro
 }
 
 function mapearPresupuesto(fila: Record<string, unknown>): Presupuesto {
@@ -282,6 +316,116 @@ export const gpService = {
       if (error.code === '23505') return { data: null, error: null }
       return { data: null, error: { message: error.message } }
     }
+    return { data: null, error: null }
+  },
+
+  // Razones Sociales
+  async listarRazonesSociales(): Promise<RespuestaBackend<RazonSocial[]>> {
+    const { data, error } = await supabase
+      .from('razones_sociales')
+      .select('*')
+      .eq('activo', true)
+      .order('nombre')
+    if (error) return { data: null, error: { message: error.message } }
+    return {
+      data: ((data ?? []) as Record<string, unknown>[]).map(mapearRazonSocial),
+      error: null,
+    }
+  },
+
+  async crearRazonSocial(datos: {
+    nombre: string
+    rif?: string
+    direccion?: string
+    telefono?: string
+    email?: string
+  }): Promise<RespuestaBackend<RazonSocial>> {
+    const { data, error } = await supabase
+      .from('razones_sociales')
+      .insert(datos)
+      .select()
+      .single()
+    if (error) return { data: null, error: { message: error.message } }
+    return { data: mapearRazonSocial(data as Record<string, unknown>), error: null }
+  },
+
+  async actualizarRazonSocial(
+    id: string,
+    datos: {
+      nombre?: string
+      rif?: string
+      direccion?: string
+      telefono?: string
+      email?: string
+      activo?: boolean
+    },
+  ): Promise<RespuestaBackend<null>> {
+    const { error } = await supabase.from('razones_sociales').update(datos).eq('id', id)
+    if (error) return { data: null, error: { message: error.message } }
+    return { data: null, error: null }
+  },
+
+  async eliminarRazonSocial(id: string): Promise<RespuestaBackend<null>> {
+    const { error } = await supabase.from('razones_sociales').update({ activo: false }).eq('id', id)
+    if (error) return { data: null, error: { message: error.message } }
+    return { data: null, error: null }
+  },
+
+  // Centros de Costo
+  async listarCentrosCosto(): Promise<RespuestaBackend<CentroCosto[]>> {
+    const { data, error } = await supabase
+      .from('centros_costo')
+      .select('*, razones_sociales(*)')
+      .eq('activo', true)
+      .order('nombre')
+    if (error) return { data: null, error: { message: error.message } }
+    return {
+      data: ((data ?? []) as Record<string, unknown>[]).map(mapearCentroCosto),
+      error: null,
+    }
+  },
+
+  async listarCentrosCostoPorRazonSocial(razonSocialId: string): Promise<RespuestaBackend<CentroCosto[]>> {
+    const { data, error } = await supabase
+      .from('centros_costo')
+      .select('*')
+      .eq('razon_social_id', razonSocialId)
+      .eq('activo', true)
+      .order('nombre')
+    if (error) return { data: null, error: { message: error.message } }
+    return {
+      data: ((data ?? []) as Record<string, unknown>[]).map(mapearCentroCosto),
+      error: null,
+    }
+  },
+
+  async crearCentroCosto(datos: {
+    razon_social_id: string
+    nombre: string
+    descripcion?: string
+  }): Promise<RespuestaBackend<CentroCosto>> {
+    const { data, error } = await supabase.from('centros_costo').insert(datos).select().single()
+    if (error) return { data: null, error: { message: error.message } }
+    return { data: mapearCentroCosto(data as Record<string, unknown>), error: null }
+  },
+
+  async actualizarCentroCosto(
+    id: string,
+    datos: {
+      razon_social_id?: string
+      nombre?: string
+      descripcion?: string
+      activo?: boolean
+    },
+  ): Promise<RespuestaBackend<null>> {
+    const { error } = await supabase.from('centros_costo').update(datos).eq('id', id)
+    if (error) return { data: null, error: { message: error.message } }
+    return { data: null, error: null }
+  },
+
+  async eliminarCentroCosto(id: string): Promise<RespuestaBackend<null>> {
+    const { error } = await supabase.from('centros_costo').update({ activo: false }).eq('id', id)
+    if (error) return { data: null, error: { message: error.message } }
     return { data: null, error: null }
   },
 }

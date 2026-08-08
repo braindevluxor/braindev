@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
-import type { Moneda, Movimiento, TipoMovimiento } from '../../types'
+import type { CentroCosto, Moneda, Movimiento, RazonSocial, TipoMovimiento } from '../../types'
 import { gpService, type DatosMovimiento } from './services'
+import { tasaService } from '../../services/tasa'
 import { formatoBs, formatoFecha, formatoUsd } from './utils'
 import { useContextoGastoPresupuesto } from './contexto'
 import Cargando from '../../components/Cargando'
@@ -36,6 +37,8 @@ export default function RegistroTab() {
   const [monto, setMonto] = useState('')
   const [moneda, setMoneda] = useState<Moneda>('USD')
   const [tasa, setTasa] = useState('')
+  const [razonSocialId, setRazonSocialId] = useState('')
+  const [centroCostoId, setCentroCostoId] = useState('')
 
   const [movimientos, setMovimientos] = useState<Movimiento[]>([])
   const [directorio, setDirectorio] = useState<Record<string, string>>({})
@@ -50,6 +53,10 @@ export default function RegistroTab() {
   const [busqueda, setBusqueda] = useState('')
   const [conceptosDisponibles, setConceptosDisponibles] = useState<string[]>([])
   const [erroresCampos, setErroresCampos] = useState<Record<string, string>>({})
+  const [razonesSociales, setRazonesSociales] = useState<RazonSocial[]>([])
+  const [centrosCosto, setCentrosCosto] = useState<CentroCosto[]>([])
+  const [cargandoTasa, setCargandoTasa] = useState(false)
+  const [mensajeTasa, setMensajeTasa] = useState<string | null>(null)
 
   const montoRef = useRef<HTMLInputElement>(null)
 
@@ -93,6 +100,32 @@ export default function RegistroTab() {
       setConceptosDisponibles([])
     }
   }, [departamentoId])
+
+  async function cargarTasaAutomatica() {
+    setCargandoTasa(true)
+    setMensajeTasa(null)
+    
+    // Primero intentar con la API del BCV
+    const resBCV = await tasaService.obtenerTasaBCV()
+    if (resBCV.data && resBCV.data.usd > 0) {
+      setTasa(resBCV.data.usd.toString())
+      setMensajeTasa(`Tasa BCV cargada: ${resBCV.data.usd} Bs/USD`)
+      setCargandoTasa(false)
+      return
+    }
+    
+    // Si falla, intentar con la API alternativa
+    const resUSD = await tasaService.obtenerTasaUSD()
+    if (resUSD.data && resUSD.data > 0) {
+      setTasa(resUSD.data.toString())
+      setMensajeTasa(`Tasa cargada: ${resUSD.data.toFixed(2)} Bs/USD`)
+      setCargandoTasa(false)
+      return
+    }
+    
+    setMensajeTasa('No se pudo cargar la tasa automáticamente. Ingresa manualmente.')
+    setCargandoTasa(false)
+  }
 
   const esAdmin = perfil?.role === 'admin'
 
@@ -209,6 +242,7 @@ export default function RegistroTab() {
   function abrirNuevo() {
     limpiarForm()
     setVista('registrar')
+    void cargarTasaAutomatica()
   }
 
   async function eliminar(m: Movimiento) {
@@ -356,22 +390,36 @@ export default function RegistroTab() {
 
               <label className="campo">
                 <span>Tasa de cambio (Bs por USD) *</span>
-                <input
-                  className={erroresCampos.tasa ? 'campo-error' : ''}
-                  type="number"
-                  inputMode="decimal"
-                  step="0.0001"
-                  min="0.0001"
-                  value={tasa}
-                  onChange={(e) => {
-                    setTasa(e.target.value)
-                    if (erroresCampos.tasa) {
-                      setErroresCampos((prev) => ({ ...prev, tasa: '' }))
-                    }
-                  }}
-                  placeholder="Ej. 36.50"
-                  required
-                />
+                <div className="campo-tasa">
+                  <input
+                    className={erroresCampos.tasa ? 'campo-error' : ''}
+                    type="number"
+                    inputMode="decimal"
+                    step="0.0001"
+                    min="0.0001"
+                    value={tasa}
+                    onChange={(e) => {
+                      setTasa(e.target.value)
+                      if (erroresCampos.tasa) {
+                        setErroresCampos((prev) => ({ ...prev, tasa: '' }))
+                      }
+                    }}
+                    placeholder="Ej. 36.50"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="btn-tasa-refresh"
+                    onClick={() => void cargarTasaAutomatica()}
+                    disabled={cargandoTasa}
+                    title="Cargar tasa automática"
+                  >
+                    {cargandoTasa ? '⏳' : '🔄'}
+                  </button>
+                </div>
+                {mensajeTasa && (
+                  <span className="campo-tasa-msg">{mensajeTasa}</span>
+                )}
                 {erroresCampos.tasa && (
                   <span className="campo-error-msg">{erroresCampos.tasa}</span>
                 )}

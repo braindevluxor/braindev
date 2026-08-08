@@ -11,6 +11,7 @@ import GastoPresupuestoPage, {
   RegistroTab,
   PresupuestosTab,
   ReportesTab,
+  CentrosCostoTab,
 } from './modules/gasto-presupuesto'
 import { MODULOS, obtenerModuloPorRuta } from './config/modules'
 import type { CSSProperties } from 'react'
@@ -75,6 +76,7 @@ export default function App() {
             <Route path="registro" element={<RegistroTab />} />
             <Route path="presupuestos" element={<PresupuestosTab />} />
             <Route path="reportes" element={<ReportesTab />} />
+            <Route path="centros-costo" element={<CentrosCostoTab />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

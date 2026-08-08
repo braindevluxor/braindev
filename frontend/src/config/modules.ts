@@ -1,5 +1,5 @@
 import { IconoPresupuestos, IconoRegistro, IconoReportes } from '../components/pestanaIconos'
-import { FiUsers } from 'react-icons/fi'
+import { FiUsers, FiGrid } from 'react-icons/fi'
 import type { ModuloConfig } from '../types'
 
 /**
@@ -46,6 +46,12 @@ export const MODULOS: ModuloConfig[] = [
         icono: IconoPresupuestos,
       },
       { id: 'reportes', etiqueta: 'Reportes', ruta: '/gasto-presupuesto/reportes', icono: IconoReportes },
+      {
+        id: 'centros-costo',
+        etiqueta: 'Centros de Costo',
+        ruta: '/gasto-presupuesto/centros-costo',
+        icono: FiGrid,
+      },
     ],
     color: {
       principal: '#0891B2',

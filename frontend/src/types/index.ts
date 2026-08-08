@@ -54,6 +54,29 @@ export interface Departamento {
   created_at: string
 }
 
+export interface RazonSocial {
+  id: string
+  nombre: string
+  rif?: string
+  direccion?: string
+  telefono?: string
+  email?: string
+  activo: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface CentroCosto {
+  id: string
+  razon_social_id: string
+  nombre: string
+  descripcion?: string
+  activo: boolean
+  created_at: string
+  updated_at: string
+  razon_social?: RazonSocial
+}
+
 export interface Movimiento {
   id: string
   tipo: TipoMovimiento
@@ -67,6 +90,7 @@ export interface Movimiento {
   monto_usd: number
   monto_bs: number
   registrado_por: string
+  centro_costo_id?: string
   created_at: string
 }
 
