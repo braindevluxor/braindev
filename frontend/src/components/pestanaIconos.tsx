@@ -1,5 +1,5 @@
-import { ChartColumn, Edit3, Target } from 'lucide-react'
+import { Edit, Target, ChartBar } from "@/components/animate-ui/icons"
 
-export const IconoRegistro = Edit3
+export const IconoRegistro = Edit
 export const IconoPresupuestos = Target
-export const IconoReportes = ChartColumn
+export const IconoReportes = ChartBar

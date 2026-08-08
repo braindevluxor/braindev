@@ -1,4 +1,4 @@
-import { ArrowDownRight, ArrowUpRight, Scale, ReceiptText } from 'lucide-react'
+import { ArrowDown, ArrowUp, Scale, Receipt } from '@/components/animate-ui/icons'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Departamento, Movimiento, Presupuesto } from '../../types'
 import { gpService } from './services'
@@ -56,19 +56,19 @@ function colorUso(porcentaje: number): string {
 }
 
 function IconoGasto() {
-  return <ArrowDownRight size={24} strokeWidth={1.9} />
+  return <ArrowDown size={24} animateOnHover />
 }
 
 function IconoIngreso() {
-  return <ArrowUpRight size={24} strokeWidth={1.9} />
+  return <ArrowUp size={24} animateOnHover />
 }
 
 function IconoSuperavit() {
-  return <Scale size={24} strokeWidth={1.9} />
+  return <Scale size={24} animateOnHover />
 }
 
 function IconoOperaciones() {
-  return <ReceiptText size={24} strokeWidth={1.9} />
+  return <Receipt size={24} animateOnHover />
 }
 
 export default function ReportesTab() {

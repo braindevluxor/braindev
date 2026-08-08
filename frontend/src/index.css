@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
   /* Neutros del sistema (gama slate) */
   --gris-50: #f8fafc;

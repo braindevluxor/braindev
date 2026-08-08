@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Ellipsis, LogOut } from 'lucide-react'
+import { MoreVertical, LogOut } from '@/components/animate-ui/icons'
 import { useAuth } from '../contexts/AuthContext'
 import ModuleSelector from './ModuleSelector'
 import type { ModuloConfig } from '../types'
@@ -96,7 +96,7 @@ export default function NavBar({ moduloActivo }: Props) {
             <span className="navbar-avatar" style={{ backgroundColor: moduloActivo.color.principal }}>
               {inicial}
             </span>
-            <Ellipsis size={18} strokeWidth={2} />
+            <MoreVertical size={18} animateOnHover />
           </button>
 
           {menuAbierto && (
@@ -116,7 +116,7 @@ export default function NavBar({ moduloActivo }: Props) {
                 onClick={onCerrarSesion}
                 disabled={cerrando}
               >
-                <LogOut size={16} strokeWidth={2} />
+                <LogOut size={16} animateOnHover />
                 {cerrando ? 'Cerrando…' : 'Cerrar sesión'}
               </button>
             </div>
