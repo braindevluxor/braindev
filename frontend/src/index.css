@@ -1311,6 +1311,203 @@ p {
   color: var(--gris-600);
 }
 
+/* ---------- Minutas ---------- */
+.minutas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: 1rem;
+}
+
+.minuta-tarjeta {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: box-shadow var(--transicion), border-color var(--transicion);
+}
+
+.minuta-tarjeta:hover {
+  border-color: var(--mod-color);
+  box-shadow: 0 4px 14px rgb(15 23 42 / 0.08);
+}
+
+.minuta-tarjeta-cuerpo {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.minuta-tarjeta-fecha {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 3.4rem;
+  padding: 0.4rem 0;
+  border-radius: var(--radio);
+  background-color: var(--mod-color-soft);
+  color: var(--mod-color-dark);
+  line-height: 1.05;
+}
+
+.minuta-tarjeta-fecha strong {
+  font-size: 1.25rem;
+}
+
+.minuta-tarjeta-fecha span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.minuta-tarjeta-fecha small {
+  font-size: 0.7rem;
+}
+
+.minuta-tarjeta-info {
+  min-width: 0;
+}
+
+.minuta-tarjeta-info h4 {
+  margin: 0 0 0.3rem;
+  font-size: 0.98rem;
+  color: var(--gris-900);
+}
+
+.minuta-tarjeta-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--gris-500);
+  flex-wrap: wrap;
+}
+
+.minuta-tarjeta-compromisos {
+  margin: 0.4rem 0 0;
+  font-size: 0.8rem;
+  color: var(--gris-600);
+}
+
+.badge-pendientes {
+  color: #92400e;
+  background-color: #fef3c7;
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.minuta-tarjeta-acciones {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: flex;
+  gap: 0.4rem;
+}
+
+.participantes-input {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.participantes-input input {
+  flex: 1;
+}
+
+.participantes-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.participante-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background-color: var(--mod-color-soft);
+  color: var(--mod-color-dark);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.participante-chip-x {
+  display: grid;
+  place-items: center;
+  width: 1.05rem;
+  height: 1.05rem;
+  border: none;
+  border-radius: 50%;
+  background-color: transparent;
+  color: inherit;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.participante-chip-x:hover {
+  background-color: rgb(15 23 42 / 0.1);
+}
+
+.minuta-detalle {
+  display: grid;
+  gap: 1rem;
+}
+
+.minuta-detalle-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.minuta-detalle-chips {
+  margin-top: 0;
+}
+
+.minuta-detalle-observaciones h4 {
+  margin: 0 0 0.3rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gris-500);
+}
+
+.minuta-detalle-observaciones p {
+  margin: 0;
+  white-space: pre-wrap;
+  color: var(--gris-700);
+  line-height: 1.55;
+}
+
+.compromiso-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+}
+
+.compromiso-check input {
+  accent-color: var(--mod-color);
+}
+
+.vencido-label {
+  margin-left: 0.4rem;
+}
+
 /* ---------- Modal ---------- */
 .modal-fondo {
   position: fixed;
@@ -1587,6 +1784,27 @@ p {
 
 @media (max-width: 640px) {
   .form-tarjeta.registro-gasto .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Vista de registro de reunión ---------- */
+.form-tarjeta.registro-reunion .form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.form-tarjeta.registro-reunion .campo-fijo {
+  grid-column: 1 / -1;
+}
+
+.form-tarjeta.registro-reunion .form-acciones {
+  grid-column: 1 / -1;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--gris-100);
+}
+
+@media (max-width: 640px) {
+  .form-tarjeta.registro-reunion .form-grid {
     grid-template-columns: 1fr;
   }
 }

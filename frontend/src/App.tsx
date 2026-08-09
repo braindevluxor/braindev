@@ -17,6 +17,7 @@ import TallerMecanicoPage, {
   VehiculosTab,
   RequisicionesTab,
 } from './modules/taller-mecanico'
+import MinutasPage, { ReunionesTab } from './modules/minutas'
 import { MODULOS, obtenerModuloPorRuta } from './config/modules'
 import type { CSSProperties } from 'react'
 function PantallaCarga() {
@@ -86,6 +87,10 @@ export default function App() {
             <Route index element={<Navigate to="vehiculos" replace />} />
             <Route path="vehiculos" element={<VehiculosTab />} />
             <Route path="requisiciones" element={<RequisicionesTab />} />
+          </Route>
+          <Route path="minutas" element={<MinutasPage />}>
+            <Route index element={<Navigate to="reuniones" replace />} />
+            <Route path="reuniones" element={<ReunionesTab />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

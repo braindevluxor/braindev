@@ -1,6 +1,7 @@
 import type { Icon } from '@tabler/icons-react'
 import {
   IconBoxMultipleFilled,
+  IconCalendarFilled,
   IconChartPieFilled,
   IconCircleArrowDownFilled,
   IconCircleArrowUpFilled,
@@ -25,6 +26,8 @@ export const IconoCentrosCosto: Icon = IconBoxMultipleFilled
 export const IconoVehiculos: Icon = IconTruckFilled
 export const IconoRequisiciones: Icon = IconClipboardTextFilled
 export const IconoTruck: Icon = IconTruckFilled
+
+export const IconoReuniones: Icon = IconCalendarFilled
 
 export const IconoGasto: Icon = IconCircleArrowDownFilled
 export const IconoIngreso: Icon = IconCircleArrowUpFilled

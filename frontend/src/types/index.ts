@@ -196,3 +196,29 @@ export interface Requisicion {
   updated_at: string
   vehiculo?: Vehiculo
 }
+
+// Módulo Minutas
+export interface Reunion {
+  id: string
+  titulo: string
+  fecha: string
+  lugar?: string
+  participantes: string[]
+  observaciones?: string
+  registrado_por: string
+  created_at: string
+  updated_at: string
+  compromisos?: Compromiso[]
+}
+
+export interface Compromiso {
+  id: string
+  reunion_id: string
+  descripcion: string
+  responsable: string
+  fecha_tope: string
+  completado: boolean
+  registrado_por: string
+  created_at: string
+  updated_at: string
+}

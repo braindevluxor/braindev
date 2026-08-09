@@ -4,6 +4,7 @@ import {
   IconoRegistro,
   IconoRequisiciones,
   IconoReportes,
+  IconoReuniones,
   IconoUsuarios,
   IconoVehiculos,
 } from '../components/pestanaIconos'
@@ -91,6 +92,27 @@ export const MODULOS: ModuloConfig[] = [
       principal: '#7C3AED',
       oscuro: '#6D28D9',
       suave: '#F5F3FF',
+      contraste: '#FFFFFF',
+    },
+  },
+  {
+    id: 'minutas',
+    nombre: 'Minutas',
+    descripcion: 'Registro y seguimiento de reuniones, compromisos y acuerdos.',
+    ruta: '/minutas',
+    habilitado: true,
+    pestanas: [
+      {
+        id: 'reuniones',
+        etiqueta: 'Reuniones',
+        ruta: '/minutas/reuniones',
+        icono: IconoReuniones,
+      },
+    ],
+    color: {
+      principal: '#059669',
+      oscuro: '#047857',
+      suave: '#ECFDF5',
       contraste: '#FFFFFF',
     },
   },

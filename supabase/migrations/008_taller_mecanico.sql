@@ -22,7 +22,7 @@ create table if not exists public.vehiculos (
   serial_carroceria text,
   observaciones text,
   activo boolean not null default true,
-  registrado_por uuid references public.profiles (id) on delete set null,
+  registrado_por uuid default auth.uid() references public.profiles (id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -44,7 +44,7 @@ create table if not exists public.requisiciones (
   estado text not null default 'pendiente' check (estado in ('pendiente', 'en_proceso', 'completado', 'cancelado')),
   fecha_solicitud date not null default current_date,
   fecha_estimada date,
-  registrado_por uuid references public.profiles (id) on delete set null,
+  registrado_por uuid default auth.uid() references public.profiles (id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -133,3 +133,14 @@ values
   ('tm-vehiculos', 'taller-mecanico', 'Vehículos', '/vehiculos', 1),
   ('tm-requisiciones', 'taller-mecanico', 'Requisiciones', '/requisiciones', 2)
 on conflict (id) do nothing;
+
+-- ---------------------------------------------------------------------------
+-- 6. Refuerzo idempotente de restricciones
+--    Si la migración ya se aplicó antes, deja registrado_por con default
+--    auth.uid() (requisito de las políticas RLS de insert). Los seeds de
+--    simulación usan NULL como marca, por eso no es NOT NULL.
+-- ---------------------------------------------------------------------------
+alter table public.vehiculos alter column registrado_por set default auth.uid();
+alter table public.vehiculos alter column registrado_por drop not null;
+alter table public.requisiciones alter column registrado_por set default auth.uid();
+alter table public.requisiciones alter column registrado_por drop not null;
