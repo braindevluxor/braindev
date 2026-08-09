@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { gpService } from './services'
 import type { CentroCosto, RazonSocial } from '../../types'
 import Cargando from '../../components/Cargando'
+import { IconPencilFilled, IconTrashFilled } from '@tabler/icons-react'
 
 export default function CentrosCostoTab() {
   const [razonesSociales, setRazonesSociales] = useState<RazonSocial[]>([])
@@ -239,15 +240,19 @@ export default function CentrosCostoTab() {
                   type="button"
                   className="btn-secundario btn-sm"
                   onClick={() => editarRazonSocial(razonSocial)}
+                  aria-label={`Editar ${razonSocial.nombre}`}
+                  title="Editar"
                 >
-                  Editar
+                  <IconPencilFilled size={15} />
                 </button>
                 <button
                   type="button"
                   className="btn-peligro btn-sm"
                   onClick={() => eliminarRazonSocial(razonSocial)}
+                  aria-label={`Eliminar ${razonSocial.nombre}`}
+                  title="Eliminar"
                 >
-                  Eliminar
+                  <IconTrashFilled size={15} />
                 </button>
               </div>
             </div>
@@ -274,15 +279,19 @@ export default function CentrosCostoTab() {
                             type="button"
                             className="btn-secundario btn-sm"
                             onClick={() => editarCentroCosto(cc)}
+                            aria-label={`Editar ${cc.nombre}`}
+                            title="Editar"
                           >
-                            Editar
+                            <IconPencilFilled size={15} />
                           </button>
                           <button
                             type="button"
                             className="btn-peligro btn-sm"
                             onClick={() => eliminarCentroCosto(cc)}
+                            aria-label={`Eliminar ${cc.nombre}`}
+                            title="Eliminar"
                           >
-                            Eliminar
+                            <IconTrashFilled size={15} />
                           </button>
                         </td>
                       </tr>

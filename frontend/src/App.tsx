@@ -13,6 +13,10 @@ import GastoPresupuestoPage, {
   ReportesTab,
   CentrosCostoTab,
 } from './modules/gasto-presupuesto'
+import TallerMecanicoPage, {
+  VehiculosTab,
+  RequisicionesTab,
+} from './modules/taller-mecanico'
 import { MODULOS, obtenerModuloPorRuta } from './config/modules'
 import type { CSSProperties } from 'react'
 function PantallaCarga() {
@@ -77,6 +81,11 @@ export default function App() {
             <Route path="presupuestos" element={<PresupuestosTab />} />
             <Route path="reportes" element={<ReportesTab />} />
             <Route path="centros-costo" element={<CentrosCostoTab />} />
+          </Route>
+          <Route path="taller-mecanico" element={<TallerMecanicoPage />}>
+            <Route index element={<Navigate to="vehiculos" replace />} />
+            <Route path="vehiculos" element={<VehiculosTab />} />
+            <Route path="requisiciones" element={<RequisicionesTab />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -156,3 +156,43 @@ export interface PermisosPorHerramienta {
 export interface PermisosUsuarioMap {
   [herramienta_id: string]: PermisosPorHerramienta
 }
+
+// Módulo Taller Mecánico
+export type TipoVehiculo = 'camioneta' | 'sedan' | 'camion' | 'furgoneta' | 'motocicleta' | 'otro'
+
+export type TipoRequisicion = 'revision' | 'reparacion' | 'otro'
+export type PrioridadRequisicion = 'baja' | 'media' | 'alta'
+export type EstadoRequisicion = 'pendiente' | 'en_proceso' | 'completado' | 'cancelado'
+
+export interface Vehiculo {
+  id: string
+  placa: string
+  marca: string
+  modelo: string
+  anio?: number
+  color?: string
+  tipo?: TipoVehiculo
+  capacidad?: string
+  serial_motor?: string
+  serial_carroceria?: string
+  observaciones?: string
+  activo: boolean
+  registrado_por: string
+  created_at: string
+  updated_at: string
+}
+
+export interface Requisicion {
+  id: string
+  vehiculo_id: string
+  tipo: TipoRequisicion
+  prioridad?: PrioridadRequisicion
+  descripcion: string
+  estado: EstadoRequisicion
+  fecha_solicitud: string
+  fecha_estimada?: string
+  registrado_por: string
+  created_at: string
+  updated_at: string
+  vehiculo?: Vehiculo
+}

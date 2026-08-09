@@ -282,7 +282,8 @@ p {
 }
 
 .campo input,
-.campo select {
+.campo select,
+.campo textarea {
   width: 100%;
   padding: 0.62rem 0.85rem;
   border: 1px solid var(--borde);
@@ -295,12 +296,19 @@ p {
   transition: border-color var(--transicion);
 }
 
-.campo input::placeholder {
+.campo textarea {
+  resize: vertical;
+  min-height: 4.5rem;
+}
+
+.campo input::placeholder,
+.campo textarea::placeholder {
   color: var(--gris-300);
 }
 
 .campo input:focus,
-.campo select:focus {
+.campo select:focus,
+.campo textarea:focus {
   border-color: var(--mod-color);
   outline: 2px solid var(--mod-color);
   outline-offset: 1px;
@@ -308,18 +316,21 @@ p {
 }
 
 .campo input:hover:not(:focus),
-.campo select:hover:not(:focus) {
+.campo select:hover:not(:focus),
+.campo textarea:hover:not(:focus) {
   border-color: var(--gris-300);
 }
 
 .campo input.campo-error,
-.campo select.campo-error {
+.campo select.campo-error,
+.campo textarea.campo-error {
   border-color: #dc2626;
   background-color: #fef2f2;
 }
 
 .campo input.campo-error:focus,
-.campo select.campo-error:focus {
+.campo select.campo-error:focus,
+.campo textarea.campo-error:focus {
   border-color: #dc2626;
   outline-color: #dc2626;
 }
@@ -467,6 +478,10 @@ p {
 .btn-primario,
 .btn-secundario,
 .btn-logout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   font-family: inherit;
   font-weight: 600;
   cursor: pointer;
@@ -474,12 +489,12 @@ p {
 }
 
 .btn-primario {
-  padding: 0.62rem 1.1rem;
-  border: none;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid transparent;
   border-radius: var(--radio);
   background-color: var(--mod-color);
   color: var(--mod-color-contrast);
-  font-size: 0.92rem;
+  font-size: 0.82rem;
 }
 
 .btn-primario:hover {
@@ -498,12 +513,12 @@ p {
 }
 
 .btn-secundario {
-  padding: 0.62rem 1.1rem;
+  padding: 0.4rem 0.8rem;
   border: 1px solid var(--borde);
   border-radius: var(--radio);
   background-color: #fff;
   color: var(--gris-700);
-  font-size: 0.92rem;
+  font-size: 0.82rem;
 }
 
 .btn-secundario:hover {
@@ -514,6 +529,25 @@ p {
 .btn-secundario:active {
   background-color: var(--gris-100);
   outline: 2px solid var(--gris-300);
+  outline-offset: 2px;
+}
+
+/* Botón estilo Excel (verde) para importar desde Excel */
+.btn-excel {
+  background-color: #107c41;
+  border-color: #107c41;
+  color: #fff;
+}
+
+.btn-excel:hover {
+  background-color: #0b5c30;
+  border-color: #0b5c30;
+  color: #fff;
+}
+
+.btn-excel:active {
+  background-color: #0b5c30;
+  outline: 2px solid #0b5c30;
   outline-offset: 2px;
 }
 
@@ -537,12 +571,12 @@ p {
 }
 
 .btn-logout {
-  padding: 0.45rem 0.85rem;
+  padding: 0.4rem 0.8rem;
   border: 1px solid rgb(255 255 255 / 0.35);
   border-radius: 0.5rem;
   background-color: rgb(255 255 255 / 0.12);
   color: #fff;
-  font-size: 0.84rem;
+  font-size: 0.82rem;
 }
 
 .btn-logout:hover {
@@ -629,7 +663,9 @@ p {
 }
 
 .navbar-pestanas {
-  flex: 1;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -642,6 +678,7 @@ p {
   align-items: center;
   gap: 0.7rem;
   min-width: max-content;
+  margin-left: auto;
 }
 
 .navbar-usuario {
@@ -1009,6 +1046,24 @@ p {
   background-color: var(--gris-50);
 }
 
+/* Tabla con encabezados fijos al hacer scroll vertical */
+.tabla-scroll {
+  overflow: auto;
+  max-height: min(65vh, 40rem);
+}
+
+.tabla-scroll .tabla {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.tabla-scroll .tabla thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: var(--gris-100);
+}
+
 .acciones {
   display: flex;
   gap: 0.9rem;
@@ -1032,10 +1087,11 @@ p {
 
 .busqueda-input {
   flex: 1;
-  padding: 0.75rem 1rem;
+  padding: 0.62rem 0.9rem;
   border: 1px solid var(--borde);
   border-radius: 0.5rem;
-  font-size: 0.9375rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
   transition: border-color 0.15s ease;
 }
 
@@ -1178,6 +1234,81 @@ p {
 .estado.inactivo {
   color: #991b1b;
   background-color: #fee2e2;
+}
+
+.estado.pendiente {
+  color: #92400e;
+  background-color: #fef3c7;
+}
+
+.estado.proceso {
+  color: #1e40af;
+  background-color: #dbeafe;
+}
+
+.estado.completado {
+  color: #166534;
+  background-color: #dcfce7;
+}
+
+.estado.cancelado {
+  color: #57534e;
+  background-color: #e7e5e4;
+}
+
+.estado.prioridad-alta {
+  color: #991b1b;
+  background-color: #fee2e2;
+}
+
+.estado.prioridad-media {
+  color: #92400e;
+  background-color: #fef3c7;
+}
+
+.estado.prioridad-baja {
+  color: #57534e;
+  background-color: #e7e5e4;
+}
+
+.fila-inactiva {
+  opacity: 0.55;
+}
+
+.fila-inactiva:hover {
+  opacity: 1;
+}
+
+.placa-vehiculo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--mod-color-dark);
+  white-space: nowrap;
+}
+
+.select-estado {
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  font-size: 0.82rem;
+  font-family: inherit;
+  background-color: #fff;
+  color: var(--gris-900);
+  cursor: pointer;
+}
+
+.select-estado:focus {
+  border-color: var(--mod-color);
+  outline: 2px solid var(--mod-color);
+  outline-offset: 1px;
+}
+
+.celda-descripcion {
+  max-width: 18rem;
+  color: var(--gris-600);
 }
 
 /* ---------- Modal ---------- */
@@ -1783,6 +1914,14 @@ p {
 .tarjeta-herramienta .busqueda-contenedor {
   flex: 1;
   max-width: 400px;
+  margin-bottom: 0;
+}
+
+.tarjeta-herramienta-acciones {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
 }
 
 /* ---------- Modal ancho ---------- */
@@ -2212,21 +2351,17 @@ p {
 .btn-peligro {
   background: #dc2626;
   color: white;
-  border: none;
-  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  padding: 0.4rem 0.8rem;
   border-radius: 0.5rem;
   font-weight: 600;
+  font-size: 0.82rem;
   cursor: pointer;
   transition: background 0.2s;
 }
 
 .btn-peligro:hover {
   background: #991b1b;
-}
-
-.btn-peligro.btn-sm {
-  padding: 0.35rem 0.75rem;
-  font-size: 0.85rem;
 }
 
 .fila-seleccionada {
@@ -2900,4 +3035,161 @@ p {
   .presupuestos-header-acciones button {
     width: 100%;
   }
+}
+
+/* ---------- Importar movimientos desde Excel ---------- */
+.modal.importar-modal {
+  max-width: 52rem;
+}
+
+.importar-subtitulo {
+  margin-top: 0.15rem;
+  color: var(--gris-500);
+  font-size: 0.85rem;
+}
+
+.importar-paso {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.importar-paso .btn-secundario {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.importar-ayuda {
+  color: var(--gris-500);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.importar-archivo {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
+  border: 2px dashed var(--gris-300);
+  border-radius: var(--radio);
+  background-color: var(--gris-50);
+  cursor: pointer;
+  transition: border-color var(--transicion), background-color var(--transicion);
+}
+
+.importar-archivo:hover {
+  border-color: var(--mod-color);
+  background-color: var(--mod-color-soft);
+}
+
+.importar-archivo strong {
+  display: block;
+  color: var(--gris-900);
+  font-size: 0.92rem;
+}
+
+.importar-archivo small {
+  display: block;
+  color: var(--gris-500);
+  font-size: 0.78rem;
+}
+
+.importar-archivo-icono {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.importar-input {
+  display: none;
+}
+
+.importar-resumen {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.importar-resumen span {
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.importar-resumen .ok {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.importar-resumen .error {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.importar-preview {
+  max-height: 20rem;
+  overflow: auto;
+  margin-top: 0.5rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+}
+
+.tabla-importar {
+  margin: 0;
+}
+
+.tabla-importar th,
+.tabla-importar td {
+  padding: 0.4rem 0.55rem;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.fila-importar-ok td {
+  background-color: #f0fdf4;
+}
+
+.fila-importar-error td {
+  background-color: #fef2f2;
+}
+
+.importar-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.4rem;
+  height: 1.4rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.importar-badge.ok {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.importar-badge.error {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.importar-lista-errores {
+  max-height: 9rem;
+  overflow: auto;
+  margin: 0.75rem 0 0;
+  padding: 0.6rem 0.8rem 0.6rem 1.6rem;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radio);
+  font-size: 0.8rem;
+  color: #7f1d1d;
+}
+
+.importar-lista-errores li {
+  margin: 0.2rem 0;
 }

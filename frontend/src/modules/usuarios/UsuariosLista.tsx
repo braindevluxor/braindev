@@ -3,6 +3,7 @@ import { useOutletContext, useNavigate } from 'react-router-dom'
 import { usuariosService } from './services'
 import type { Perfil } from '../../types'
 import Cargando from '../../components/Cargando'
+import { IconPencilFilled, IconTrashFilled } from '@tabler/icons-react'
 
 interface OutletContextType {
   recargarUsuarios: boolean
@@ -119,8 +120,10 @@ export default function UsuariosLista() {
                         type="button"
                         className="btn-secundario btn-sm"
                         onClick={() => navigate(`/usuarios/editar/${usuario.id}`)}
+                        aria-label={`Editar ${usuario.full_name || usuario.email}`}
+                        title="Editar"
                       >
-                        Editar
+                        <IconPencilFilled size={15} />
                       </button>
                       <button
                         type="button"
@@ -140,8 +143,10 @@ export default function UsuariosLista() {
                         type="button"
                         className="btn-peligro btn-sm"
                         onClick={() => eliminarUsuario(usuario)}
+                        aria-label={`Eliminar ${usuario.full_name || usuario.email}`}
+                        title="Eliminar"
                       >
-                        Eliminar
+                        <IconTrashFilled size={15} />
                       </button>
                     </td>
                   </tr>

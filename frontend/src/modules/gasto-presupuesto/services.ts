@@ -169,6 +169,14 @@ export const gpService = {
     return { data: null, error: null }
   },
 
+  /** Inserta varios movimientos a la vez (importación desde Excel). */
+  async crearMovimientosMasivo(datos: DatosMovimiento[]): Promise<RespuestaBackend<null>> {
+    if (datos.length === 0) return { data: null, error: null }
+    const { error } = await supabase.from('movimientos').insert(datos)
+    if (error) return { data: null, error: { message: error.message } }
+    return { data: null, error: null }
+  },
+
   async actualizarMovimiento(
     id: string,
     datos: DatosMovimiento,

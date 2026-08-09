@@ -6,6 +6,8 @@ import { tasaService } from '../../services/tasa'
 import { formatoBs, formatoFecha, formatoUsd } from './utils'
 import { useContextoGastoPresupuesto } from './contexto'
 import Cargando from '../../components/Cargando'
+import { IconFileSpreadsheet, IconPencilFilled, IconTrashFilled } from '@tabler/icons-react'
+import ImportarMovimientos from './ImportarMovimientos'
 
 const TIPOS: { valor: TipoMovimiento; etiqueta: string }[] = [
   { valor: 'gasto', etiqueta: 'Gasto' },
@@ -58,6 +60,7 @@ export default function RegistroTab() {
   const [centrosCostoFiltrados, setCentrosCostoFiltrados] = useState<CentroCosto[]>([])
   const [cargandoTasa, setCargandoTasa] = useState(false)
   const [mensajeTasa, setMensajeTasa] = useState<string | null>(null)
+  const [importarAbierto, setImportarAbierto] = useState(false)
 
   const montoRef = useRef<HTMLInputElement>(null)
 
@@ -601,10 +604,25 @@ export default function RegistroTab() {
             </span>
           )}
         </div>
-        <button type="button" className="btn-primario" onClick={abrirNuevo}>
-          + Registrar movimiento
-        </button>
+        <div className="tarjeta-herramienta-acciones">
+          <button type="button" className="btn-secundario btn-excel" onClick={() => setImportarAbierto(true)}>
+            <IconFileSpreadsheet size={16} />
+            Importar Excel
+          </button>
+          <button type="button" className="btn-primario" onClick={abrirNuevo}>
+            + Registrar movimiento
+          </button>
+        </div>
       </div>
+
+      <ImportarMovimientos
+        abierto={importarAbierto}
+        onCerrar={() => setImportarAbierto(false)}
+        departamentos={departamentos}
+        razonesSociales={razonesSociales}
+        centrosCosto={centrosCosto}
+        onImportado={() => void cargar()}
+      />
 
       {aviso && <div className="alerta exito">{aviso}</div>}
       {error && <div className="alerta error">{error}</div>}
@@ -620,8 +638,9 @@ export default function RegistroTab() {
           </p>
         ) : (
           <>
-            <table className="tabla">
-              <thead>
+            <div className="tabla-scroll">
+              <table className="tabla">
+                <thead>
                 <tr>
                   <th>Fecha</th>
                   <th>Tipo</th>
@@ -658,8 +677,14 @@ export default function RegistroTab() {
                       <td className="td-der td-secundario">{formatoBs(m.monto_bs)}</td>
                       <td className="acciones">
                         {puedeEditar(m) && (
-                          <button type="button" className="btn-enlace" onClick={() => iniciarEdicion(m)}>
-                            Editar
+                          <button
+                            type="button"
+                            className="btn-enlace"
+                            onClick={() => iniciarEdicion(m)}
+                            aria-label={`Editar ${m.concepto || 'movimiento'}`}
+                            title="Editar"
+                          >
+                            <IconPencilFilled size={14} />
                           </button>
                         )}
                         {puedeEditar(m) && (
@@ -667,8 +692,10 @@ export default function RegistroTab() {
                             type="button"
                             className="btn-enlace peligro"
                             onClick={() => void eliminar(m)}
+                            aria-label={`Eliminar ${m.concepto || 'movimiento'}`}
+                            title="Eliminar"
                           >
-                            Eliminar
+                            <IconTrashFilled size={14} />
                           </button>
                         )}
                       </td>
@@ -677,6 +704,7 @@ export default function RegistroTab() {
                 })}
               </tbody>
             </table>
+            </div>
             <div className="paginacion">
               <div className="paginacion-info">
                 <span>

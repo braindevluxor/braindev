@@ -6,6 +6,7 @@ import { anioMesActual, nombreMes, formatoUsd } from './utils'
 import { useContextoGastoPresupuesto } from './contexto'
 import Cargando from '../../components/Cargando'
 import { FiChevronDown, FiChevronRight } from 'react-icons/fi'
+import { IconTrashFilled } from '@tabler/icons-react'
 
 function anioMesValor(): string {
   const { anio, mes } = anioMesActual()
@@ -277,8 +278,10 @@ export default function PresupuestosTab() {
                           type="button"
                           className="btn-peligro btn-sm"
                           onClick={() => void eliminarDepartamento(d)}
+                          aria-label={`Eliminar ${d.nombre}`}
+                          title="Eliminar"
                         >
-                          Eliminar
+                          <IconTrashFilled size={15} />
                         </button>
                       </td>
                     )}

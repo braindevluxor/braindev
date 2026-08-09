@@ -1,5 +1,12 @@
-import { IconoPresupuestos, IconoRegistro, IconoReportes } from '../components/pestanaIconos'
-import { FiUsers, FiGrid } from 'react-icons/fi'
+import {
+  IconoCentrosCosto,
+  IconoPresupuestos,
+  IconoRegistro,
+  IconoRequisiciones,
+  IconoReportes,
+  IconoUsuarios,
+  IconoVehiculos,
+} from '../components/pestanaIconos'
 import type { ModuloConfig } from '../types'
 
 /**
@@ -22,7 +29,7 @@ export const MODULOS: ModuloConfig[] = [
     ruta: '/usuarios',
     habilitado: true,
     pestanas: [
-      { id: 'lista', etiqueta: 'Usuarios', ruta: '/usuarios', icono: FiUsers },
+      { id: 'lista', etiqueta: 'Usuarios', ruta: '/usuarios', icono: IconoUsuarios },
     ],
     color: {
       principal: '#2563EB',
@@ -50,13 +57,40 @@ export const MODULOS: ModuloConfig[] = [
         id: 'centros-costo',
         etiqueta: 'Centros de Costo',
         ruta: '/gasto-presupuesto/centros-costo',
-        icono: FiGrid,
+        icono: IconoCentrosCosto,
       },
     ],
     color: {
       principal: '#0891B2',
       oscuro: '#0E7490',
       suave: '#ECFEFF',
+      contraste: '#FFFFFF',
+    },
+  },
+  {
+    id: 'taller-mecanico',
+    nombre: 'Taller Mecánico',
+    descripcion: 'Gestión de la flota de vehículos y requisiciones de mantenimiento.',
+    ruta: '/taller-mecanico',
+    habilitado: true,
+    pestanas: [
+      {
+        id: 'vehiculos',
+        etiqueta: 'Vehículos',
+        ruta: '/taller-mecanico/vehiculos',
+        icono: IconoVehiculos,
+      },
+      {
+        id: 'requisiciones',
+        etiqueta: 'Requisiciones',
+        ruta: '/taller-mecanico/requisiciones',
+        icono: IconoRequisiciones,
+      },
+    ],
+    color: {
+      principal: '#7C3AED',
+      oscuro: '#6D28D9',
+      suave: '#F5F3FF',
       contraste: '#FFFFFF',
     },
   },

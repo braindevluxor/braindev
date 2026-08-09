@@ -1,14 +1,36 @@
-import { FiEdit3, FiTarget, FiBarChart2, FiMoreVertical, FiLogOut, FiArrowDown, FiArrowUp, FiTrendingUp, FiFileText, FiInfo } from 'react-icons/fi'
+import type { Icon } from '@tabler/icons-react'
+import {
+  IconBoxMultipleFilled,
+  IconChartPieFilled,
+  IconCircleArrowDownFilled,
+  IconCircleArrowUpFilled,
+  IconClipboardTextFilled,
+  IconDotsVerticalFilled,
+  IconEditFilled,
+  IconFileTextFilled,
+  IconGraphFilled,
+  IconInfoCircleFilled,
+  IconLogout,
+  IconReportMoneyFilled,
+  IconTruckFilled,
+  IconUserFilled,
+} from '@tabler/icons-react'
 
-export const IconoRegistro = FiEdit3
-export const IconoPresupuestos = FiTarget
-export const IconoReportes = FiBarChart2
+export const IconoRegistro: Icon = IconEditFilled
+export const IconoPresupuestos: Icon = IconReportMoneyFilled
+export const IconoReportes: Icon = IconChartPieFilled
+export const IconoUsuarios: Icon = IconUserFilled
+export const IconoCentrosCosto: Icon = IconBoxMultipleFilled
 
-export const IconoGasto = FiArrowDown
-export const IconoIngreso = FiArrowUp
-export const IconoSuperavit = FiTrendingUp
-export const IconoOperaciones = FiFileText
-export const IconoInfo = FiInfo
+export const IconoVehiculos: Icon = IconTruckFilled
+export const IconoRequisiciones: Icon = IconClipboardTextFilled
+export const IconoTruck: Icon = IconTruckFilled
 
-export const IconoMenu = FiMoreVertical
-export const IconoLogout = FiLogOut
+export const IconoGasto: Icon = IconCircleArrowDownFilled
+export const IconoIngreso: Icon = IconCircleArrowUpFilled
+export const IconoSuperavit: Icon = IconGraphFilled
+export const IconoOperaciones: Icon = IconFileTextFilled
+export const IconoInfo: Icon = IconInfoCircleFilled
+
+export const IconoMenu: Icon = IconDotsVerticalFilled
+export const IconoLogout: Icon = IconLogout
