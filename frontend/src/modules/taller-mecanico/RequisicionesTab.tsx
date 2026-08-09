@@ -1,5 +1,10 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { IconClipboardText, IconPencilFilled, IconTrashFilled } from '@tabler/icons-react'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import {
+  IconClipboardText,
+  IconFilter,
+  IconPencilFilled,
+  IconTrashFilled,
+} from '@tabler/icons-react'
 import { tallerService } from './services'
 import { useContextoTaller } from './contexto'
 import { usePermisos } from '../../contexts/PermisosContext'
@@ -65,6 +70,8 @@ export default function RequisicionesTab() {
 
   const [filtroEstado, setFiltroEstado] = useState('')
   const [busqueda, setBusqueda] = useState('')
+  const [filtroAbierto, setFiltroAbierto] = useState(false)
+  const filtroRef = useRef<HTMLDivElement | null>(null)
 
   const [modal, setModal] = useState(false)
   const [editando, setEditando] = useState<Requisicion | null>(null)
@@ -98,6 +105,24 @@ export default function RequisicionesTab() {
   useEffect(() => {
     void cargar()
   }, [cargar])
+
+  useEffect(() => {
+    if (!filtroAbierto) return
+    function alClicFuera(e: MouseEvent) {
+      if (filtroRef.current && !filtroRef.current.contains(e.target as Node)) {
+        setFiltroAbierto(false)
+      }
+    }
+    function alEscape(e: KeyboardEvent) {
+      if (e.key === 'Escape') setFiltroAbierto(false)
+    }
+    document.addEventListener('mousedown', alClicFuera)
+    document.addEventListener('keydown', alEscape)
+    return () => {
+      document.removeEventListener('mousedown', alClicFuera)
+      document.removeEventListener('keydown', alEscape)
+    }
+  }, [filtroAbierto])
 
   function mostrarAviso(msg: string) {
     setAviso(msg)
@@ -218,8 +243,65 @@ export default function RequisicionesTab() {
           <h3>Requisiciones de Taller</h3>
           <p>Solicitudes de revisión, reparación u otros servicios para la flota.</p>
         </div>
+
+        <div className="busqueda-contenedor">
+          <div className="busqueda-filtro" ref={filtroRef}>
+            <button
+              type="button"
+              className={`busqueda-filtro-boton ${filtroEstado ? 'activo' : ''}`}
+              onClick={() => setFiltroAbierto((v) => !v)}
+              aria-haspopup="menu"
+              aria-expanded={filtroAbierto}
+              aria-label="Filtrar por estado"
+              title={
+                filtroEstado
+                  ? `Filtrado por: ${ESTADOS.find((es) => es.valor === filtroEstado)?.etiqueta}`
+                  : 'Filtrar por estado'
+              }
+            >
+              <IconFilter size={16} />
+            </button>
+            <input
+              type="text"
+              className="busqueda-input"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              placeholder="Buscar por placa, marca o descripción…"
+            />
+            {filtroAbierto && (
+              <div className="busqueda-filtro-dropdown" role="menu">
+                <button
+                  type="button"
+                  className={`busqueda-filtro-item ${!filtroEstado ? 'activo' : ''}`}
+                  onClick={() => {
+                    setFiltroEstado('')
+                    setFiltroAbierto(false)
+                  }}
+                  role="menuitem"
+                >
+                  <span className="estado inactivo">Todos</span>
+                </button>
+                {ESTADOS.map((es) => (
+                  <button
+                    key={es.valor}
+                    type="button"
+                    className={`busqueda-filtro-item ${filtroEstado === es.valor ? 'activo' : ''}`}
+                    onClick={() => {
+                      setFiltroEstado(es.valor)
+                      setFiltroAbierto(false)
+                    }}
+                    role="menuitem"
+                  >
+                    <span className={`estado ${es.clase}`}>{es.etiqueta}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
         {puedeCrear && (
-          <div className="acciones">
+          <div className="tarjeta-herramienta-acciones">
             <button type="button" className="btn-primario" onClick={abrirNueva}>
               + Requisición
             </button>
@@ -229,28 +311,6 @@ export default function RequisicionesTab() {
 
       {aviso && <div className="alerta exito">{aviso}</div>}
       {error && <div className="alerta error">{error}</div>}
-
-      <div className="form-grid filtros-grid">
-        <div className="campo">
-          <span>Buscar</span>
-          <input
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            placeholder="Buscar por placa, marca o descripción…"
-          />
-        </div>
-        <div className="campo">
-          <span>Estado</span>
-          <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}>
-            <option value="">Todos</option>
-            {ESTADOS.map((es) => (
-              <option key={es.valor} value={es.valor}>
-                {es.etiqueta}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
 
       {cargando ? (
         <div className="form-tarjeta">

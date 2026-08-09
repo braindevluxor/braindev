@@ -1107,6 +1107,90 @@ p {
   white-space: nowrap;
 }
 
+/* ---------- Buscador con filtro de estado ---------- */
+.busqueda-filtro {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  width: 100%;
+}
+
+.busqueda-filtro .busqueda-input {
+  width: 100%;
+  padding-left: 2.4rem;
+}
+
+.busqueda-filtro-boton {
+  position: absolute;
+  left: 0.45rem;
+  display: grid;
+  place-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border: none;
+  border-radius: 0.4rem;
+  background-color: transparent;
+  color: var(--gris-500);
+  cursor: pointer;
+  transition: color var(--transicion), background-color var(--transicion);
+}
+
+.busqueda-filtro-boton:hover {
+  color: var(--gris-700);
+  background-color: var(--gris-50);
+}
+
+.busqueda-filtro-boton.activo {
+  color: var(--mod-color);
+  background-color: var(--mod-color-soft);
+}
+
+.busqueda-filtro-boton:focus-visible {
+  color: var(--gris-700);
+  background-color: var(--gris-50);
+  outline: 2px solid var(--gris-700);
+  outline-offset: 2px;
+}
+
+.busqueda-filtro-dropdown {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  z-index: 20;
+  min-width: 13rem;
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.35rem;
+  background-color: #fff;
+  border: 1px solid var(--borde);
+  border-radius: 0.6rem;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 0.12);
+  animation: dropdown-enter 0.15s ease-out;
+}
+
+.busqueda-filtro-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.4rem 0.55rem;
+  border: none;
+  border-radius: 0.4rem;
+  background-color: transparent;
+  cursor: pointer;
+  font-size: 0.85rem;
+  text-align: left;
+}
+
+.busqueda-filtro-item:hover {
+  background-color: var(--gris-50);
+}
+
+.busqueda-filtro-item.activo {
+  background-color: var(--mod-color-soft);
+}
+
 /* ---------- Paginación ---------- */
 .paginacion {
   display: flex;
@@ -2114,6 +2198,18 @@ p {
   border: 1px solid var(--borde);
   border-radius: var(--radio);
   padding: 1.25rem 1.5rem;
+}
+
+@media (max-width: 720px) {
+  .tarjeta-herramienta {
+    flex-wrap: wrap;
+  }
+
+  .tarjeta-herramienta .busqueda-contenedor {
+    order: 3;
+    flex: 1 1 100%;
+    max-width: none;
+  }
 }
 
 .tarjeta-herramienta h3 {
